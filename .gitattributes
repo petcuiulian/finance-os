@@ -1,0 +1,2 @@
+# Preserve the supplied source of truth byte-for-byte, including CRLF.
+docs/MASTER_SPEC.md -text whitespace=trailing-space,space-before-tab,cr-at-eol

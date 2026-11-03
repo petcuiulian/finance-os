@@ -1,0 +1,37 @@
+# Rust / Tauri
+/target/
+/src-tauri/target/
+# Node
+/node_modules/
+/dist/
+/.vite/
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+*.key
+# IDE and operating system
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+# Local state and user-sensitive data
+*.db
+*.sqlite
+*.sqlite3
+*.db-wal
+*.db-shm
+*.log
+/coverage/
+/test-results/
+/playwright-report/
+
+# .NET build products
+**/bin/
+**/obj/
+/artifacts/
+/TestResults/
+*.user
+*.suo

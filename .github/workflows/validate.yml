@@ -1,0 +1,36 @@
+name: Validate foundation
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  checks:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Restore locked dependencies
+        run: dotnet restore FinanceOS.slnx --locked-mode
+      - name: Build including WPF
+        run: dotnet build FinanceOS.slnx -c Release --no-restore
+      - name: Tests
+        run: dotnet test tests/FinanceOS.Tests -c Release --no-build --no-restore
+      - name: Formatting and analyzers
+        run: dotnet format FinanceOS.slnx --verify-no-changes --no-restore
+      - name: Publish Windows folder
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/publish-windows.ps1
+      - name: Windows desktop smoke
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/smoke-windows.ps1
+      - uses: actions/upload-artifact@v4
+        if: runner.os == 'Windows'
+        with:
+          name: finance-os-win-x64-unverified-release
+          path: artifacts/win-x64/
