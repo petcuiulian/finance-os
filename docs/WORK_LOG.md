@@ -1,5 +1,12 @@
 # Durable work log
 
+## 2026-11-04 — M1 complete; M2 next
+- Added the WPF Overview and Settings shell, semantic light/dark themes, custom button/card/navigation styles with focus and disabled states, first-run welcome, English/Romanian shell text and disabled future module links.
+- SQLite schema v2 migrates M0 databases in one transaction and persists theme, language, mode and onboarding state. Simple/Advanced uses the same database; no task schema or M2 feature was started.
+- **PASS:** [CI run 41733304661](https://github.com/petcuiulian/finance-os/actions/runs/41733304661), implementation `9a95e50`: locked restore, Release build, format/analyzers and 9/9 tests on Linux and Windows. Windows development and published app smoke checks exercised navigation, settings changes, in-app notice and restart persistence. Linux `scripts/check.sh` also passed.
+- **UNVERIFIED — target laptop/manual review:** visual contrast, DPI, assistive technology and narrow layout. Corporate release checks and OS notifications remain later milestones.
+- **Next:** M2 task/project schema and usable local task manager. Stop before M2 in this task.
+
 ## 2026-11-04 — M0 COMPLETE — READY FOR SOL MEDIUM
 - Imported the supplied starter into the empty `work` branch. `MASTER_SPEC.md` is byte-for-byte unchanged (SHA256 `8d815acd90b17bd7c6acb73309bfc3616b66b3ab4e7d3e807e58f217dafb63c2`).
 - Chose .NET 10/WPF over Tauri; see ADR 0001. Native Windows scope, no WebView2 dependency, single C#/XAML toolchain. SDK 10.0.403, Microsoft.Data.Sqlite 10.0.14, committed transitive locks.

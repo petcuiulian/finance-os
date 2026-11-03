@@ -13,11 +13,12 @@
 - **UNVERIFIED — target Windows 10/11 laptop required:** visual/accessibility/DPI review, performance targets, clean-machine deployment and corporate signing/allowlisting. OS notifications/tray/resume remain M3/M6 work. These release checks are not claimed by M0's CI smoke test.
 
 ## M1 — Beautiful functional shell and design system
-- [ ] Implement premium light/dark design tokens, typography, UI primitives, sidebar/header, responsive Windows-friendly layout.
-- [ ] Build navigation with genuine working app views or visibly disabled future views (never misleading controls).
-- [ ] Add settings persistence, EN/RO i18n scaffolding and initial onboarding.
-- [ ] Implement Simple/Advanced mode toggle bound to persistent preference and shared dataset.
-**Gate:** working shell with responsive keyboard support, mode switch and persisted settings; UI checked, not just static preview.
+- [x] Implement light/dark semantic tokens, typography, reusable card/button/navigation styles and a resizable Windows shell.
+- [x] Build real Overview and Settings views; show future modules as disabled navigation items.
+- [x] Persist theme, language, mode and onboarding state; scaffold English/Romanian shell copy and first-run dismissal.
+- [x] Implement Simple/Advanced presentation toggle bound to a persisted preference in the same SQLite workspace.
+**Gate: PASS.** [CI run 41733304661](https://github.com/petcuiulian/finance-os/actions/runs/41733304661) verified implementation commit `9a95e50` on Linux and Windows. Locked restore, Release build, nine tests and formatting passed on both platforms. Windows UI Automation exercised development and published apps: navigation, buttons, theme/language/mode persistence, notice, shutdown and restart. Native buttons provide focus and access keys; future feature buttons are disabled.
+- **UNVERIFIED — target Windows laptop/manual review required:** fine visual polish, contrast and assistive technology, high DPI and narrow-screen behavior. These remain release quality checks; UI behavior was exercised on a Windows hosted runner.
 
 ## M2 — Real local task manager
 - [ ] Define SQLite task/project/category/reference/checklist model, migrations and transactions.
@@ -55,7 +56,7 @@
 **Gate:** independently verified desktop product; not just a working dev server.
 
 ## Current next task
-**M1 — Design System (Sol Medium)**. M0 is complete; M1 has not started. Keep the existing detailed M1–M6 milestones and all original features; the shorter model-routing table does not remove scope.
+**M2 — Real local task manager (Sol Medium).** M1 is complete; M2 has not started. Keep the existing detailed M1–M6 milestones and all original features; the shorter model-routing table does not remove scope.
 
 ## Scope management
 - No feature is canceled because it is in a later milestone.

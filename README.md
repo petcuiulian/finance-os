@@ -4,7 +4,7 @@ Offline-first Windows 10/11 finance productivity application. M0/M1 provide a na
 Overview and Settings shell, persisted presentation preferences and an in-app notice. Task
 management and all later features remain planned in `docs/ROADMAP.md`; this is not a
 finished finance product. M0 checks passed on Linux and Windows, including development
-and published app launch/restart smoke tests ([CI evidence](https://github.com/petcuiulian/finance-os/actions/runs/41729389594)).
+and published app launch/restart smoke tests ([M1 CI evidence](https://github.com/petcuiulian/finance-os/actions/runs/41733304661)).
 
 ## Develop
 

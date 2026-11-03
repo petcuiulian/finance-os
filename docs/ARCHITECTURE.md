@@ -30,3 +30,6 @@
 
 ## M0 decision record
 ADR 0001 evaluates candidate stacks against: WebView2 availability, corporate policy, distribution, lightweight footprint, notifications, offline storage, accessibility, UI craftsmanship, maintainability and verified Windows build path. Record selected stack and tradeoffs before creating source scaffolding.
+
+## M1 persistence extension
+SQLite schema v2 adds one typed, constrained workspace preference row for theme, language, mode and first-run completion. Version 1 databases migrate transactionally without replacing the launch counter. Both presentation modes use this same local database; task entities remain M2 scope.
