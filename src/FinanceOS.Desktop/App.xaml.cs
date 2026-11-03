@@ -10,7 +10,7 @@ public partial class App : Application
     {
         base.OnStartup(e);
         var path = AppDataPaths.DatabasePath(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
-        MainWindow = new MainWindow(new SqliteAppStore(path));
+        MainWindow = new MainWindow(new SqliteAppStore(path), new SqliteTaskStore(path));
         MainWindow.Show();
     }
 }

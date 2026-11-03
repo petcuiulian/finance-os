@@ -6,7 +6,7 @@ $exe = (Resolve-Path $ExecutablePath).Path
 function Read-LaunchCount($window) {
     $elements = $window.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
     foreach ($element in $elements) {
-        if ($element.Current.Name -match '(?:Local SQLite ready · schema|SQLite local pregătit · schema) 2 · (?:workspace launches|porniri) (\d+)$') { return [long]$Matches[1] }
+        if ($element.Current.Name -match '(?:Local SQLite ready · schema|SQLite local pregătit · schema) 3 · (?:workspace launches|porniri) (\d+)$') { return [long]$Matches[1] }
     }
     return $null
 }
@@ -66,6 +66,23 @@ function Run-Smoke([bool]$changePreferences) {
             Start-Sleep -Milliseconds 100
         } while ((Get-Date) -lt $deadline)
         if ($preferences.Current.Name -notmatch 'Dark.*ro.*Advanced') { throw 'Preferences did not persist and render.' }
+        if ($changePreferences) {
+            Invoke-ById $window 'OverviewButton'
+            $quick = Find-ById $window 'QuickTitleBox'
+            $value = $quick.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern)
+            $value.SetValue('M2 smoke task')
+            Invoke-ById $window 'QuickAddButton'
+        }
+        Invoke-ById $window 'TasksButton'
+        $deadline = (Get-Date).AddSeconds(5)
+        do {
+            $rows = $window.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
+            $found = $false
+            foreach ($row in $rows) { if ($row.Current.Name -like '*M2 smoke task*') { $found = $true; break } }
+            if ($found) { break }
+            Start-Sleep -Milliseconds 100
+        } while ((Get-Date) -lt $deadline)
+        if (!$found) { throw 'Task was not visible after creation or restart.' }
         return $count
     } finally {
         if (!$process.HasExited) {
@@ -78,4 +95,4 @@ function Run-Smoke([bool]$changePreferences) {
 $first = Run-Smoke $true
 $second = Run-Smoke $false
 if ($second -ne ($first + 1)) { throw 'Session did not persist across desktop restart.' }
-Write-Output 'PASS: Windows launch, storage, notice, navigation, preferences, close and restart persistence.'
+Write-Output 'PASS: Windows launch, storage, notice, navigation, preferences, task capture, close and restart persistence.'

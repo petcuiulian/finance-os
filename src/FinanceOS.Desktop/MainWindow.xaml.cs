@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using FinanceOS.Core;
 
 namespace FinanceOS.Desktop;
@@ -7,6 +8,9 @@ namespace FinanceOS.Desktop;
 public partial class MainWindow : Window, INotificationSink
 {
     private readonly IAppStore _store;
+    private readonly ITaskStore _tasks;
+    private WorkTask? _editing;
+    private bool _tasksBusy;
     private readonly CancellationTokenSource _lifetime = new();
     private WorkspacePreferences _preferences = new("Light", "en", "Simple", false);
     private string _page = "Overview";
@@ -14,10 +18,11 @@ public partial class MainWindow : Window, INotificationSink
     private StorageStatus? _lastStatus;
     public bool SupportsSystemNotifications => false;
 
-    public MainWindow(IAppStore store)
+    public MainWindow(IAppStore store, ITaskStore tasks)
     {
         InitializeComponent();
         _store = store;
+        _tasks = tasks;
         Closed += (_, _) => _lifetime.Cancel();
         Render();
     }
@@ -33,6 +38,7 @@ public partial class MainWindow : Window, INotificationSink
             SetPreferenceButtons(true);
             ApplyTheme();
             Render();
+            await RefreshTasksAsync();
         }
         catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
         catch (Exception)
@@ -117,16 +123,23 @@ public partial class MainWindow : Window, INotificationSink
     private void OnNavigate(object sender, RoutedEventArgs e)
     {
         _page = (string)((Button)sender).Tag;
+        ClearEditor();
         RenderPage();
+        _ = RefreshTasksAsync();
     }
 
     private void RenderPage()
     {
         OverviewPanel.Visibility = _page == "Overview" ? Visibility.Visible : Visibility.Collapsed;
         SettingsPanel.Visibility = _page == "Settings" ? Visibility.Visible : Visibility.Collapsed;
+        TaskPanel.Visibility = _page is "Tasks" or "MyDay" or "Archive" ? Visibility.Visible : Visibility.Collapsed;
+        TaskHeading.Text = T(_page, _page switch { "MyDay" => "Ziua mea", "Tasks" => "Sarcini", "Archive" => "Arhivă", _ => _page });
         PageTitle.Text = T(_page, _page == "Overview" ? "Prezentare" : "Setări");
         OverviewButton.SetResourceReference(Button.BackgroundProperty, _page == "Overview" ? "AccentSubtleBrush" : "SurfaceBrush");
         SettingsButton.SetResourceReference(Button.BackgroundProperty, _page == "Settings" ? "AccentSubtleBrush" : "SurfaceBrush");
+        MyDayButton.SetResourceReference(Button.BackgroundProperty, _page == "MyDay" ? "AccentSubtleBrush" : "SurfaceBrush");
+        TasksButton.SetResourceReference(Button.BackgroundProperty, _page == "Tasks" ? "AccentSubtleBrush" : "SurfaceBrush");
+        ArchiveButton.SetResourceReference(Button.BackgroundProperty, _page == "Archive" ? "AccentSubtleBrush" : "SurfaceBrush");
     }
 
     private string T(string english, string romanian) => _preferences.Language == "ro" ? romanian : english;
@@ -138,8 +151,10 @@ public partial class MainWindow : Window, INotificationSink
         ComingSoonLabel.Text = T("COMING LATER", "ÎN CURÂND");
         OverviewButton.Content = T("_Overview", "_Prezentare");
         SettingsButton.Content = T("_Settings", "_Setări");
-        MyDayButton.Content = T("My Day · M2", "Ziua mea · M2");
-        TasksButton.Content = T("Tasks · M2", "Sarcini · M2");
+        MyDayButton.Content = T("_My Day", "_Ziua mea");
+        TasksButton.Content = T("_Tasks", "_Sarcini");
+        ArchiveButton.Content = T("_Archive", "_Arhivă");
+        AdvancedFieldsPanel.Visibility = _preferences.Mode == "Advanced" ? Visibility.Visible : Visibility.Collapsed;
         CalendarButton.Content = T("Calendar · M3", "Calendar · M3");
         RemindersButton.Content = T("Reminders · M3", "Mementouri · M3");
         WorkflowsButton.Content = T("Workflows · M4", "Fluxuri de lucru · M4");
@@ -153,7 +168,7 @@ public partial class MainWindow : Window, INotificationSink
         WelcomeBody.Text = T("Your settings are saved on this device. Tasks and planning arrive in the next milestones.", "Preferințele sunt salvate pe acest dispozitiv. Sarcinile și planificarea vor fi disponibile în etapele următoare.");
         DismissOnboardingButton.Content = T("_Get started", "_Începe");
         OverviewHeading.Text = T("A clear start to the day.", "Un început clar pentru fiecare zi.");
-        OverviewDescription.Text = T("Your offline workspace is ready. Tasks, calendars and reminders will arrive in upcoming milestones.", "Spațiul tău offline este pregătit. Sarcinile, calendarul și mementourile vor fi disponibile în etapele următoare.");
+        OverviewDescription.Text = T("Capture tasks quickly. Your work is stored locally and survives restart.", "Adaugă sarcini rapid. Munca ta este salvată local și rămâne disponibilă după repornire.");
         StorageHeading.Text = T("Local storage", "Stocare locală");
         PrivacyText.Text = T("Data stays in your Windows user profile.", "Datele rămân în profilul tău Windows.");
         CheckStorageButton.Content = T("_Check local storage", "_Verifică stocarea locală");
@@ -168,7 +183,148 @@ public partial class MainWindow : Window, INotificationSink
         if (_lastStatus is not null) RenderStatus();
         if (NoticeText.Text.Contains("M3", StringComparison.Ordinal))
             NoticeText.Text = T("System notifications and scheduling arrive in M3. This app does not run after exit.", "Notificările de sistem și programarea vor fi disponibile în M3. Aplicația nu rulează după închidere.");
+        QuickAddButton.Content = T("_Add task", "_Adaugă sarcină");
+        EditorHeading.Text = _editing is null ? T("New task", "Sarcină nouă") : T("Edit task", "Editează sarcina");
         if (!_ready) SetPreferenceButtons(false);
+    }
+
+    private int _queryGeneration;
+
+    private async Task RefreshTasksAsync()
+    {
+        if (!_ready) return;
+        var generation = ++_queryGeneration;
+        try
+        {
+            var view = _page is "MyDay" or "Tasks" or "Archive" ? _page : "Overview";
+            var filter = view == "Tasks" ? (TaskFilterBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "All" : "All";
+            var items = await _tasks.ListAsync(new TaskQuery(view, SearchBox.Text, filter), _lifetime.Token);
+            if (generation != _queryGeneration || _lifetime.IsCancellationRequested) return;
+            TaskGrid.ItemsSource = items;
+            TaskSummaryText.Text = T($"{items.Count} task(s) in this view", $"{items.Count} sarcini în această vizualizare");
+            if (_page == "Overview")
+            {
+                var open = items.Count(x => x.Status == "Open");
+                var due = items.Count(x => x.Status == "Open" && x.DueDate <= DateOnly.FromDateTime(DateTime.Today));
+                OverviewDescription.Text = T($"{open} open · {due} due or overdue. Your work is stored locally.",
+                    $"{open} deschise · {due} scadente. Munca ta este salvată local.");
+            }
+            UpdateTaskActions();
+        }
+        catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
+        catch (Exception) { TaskErrorText.Text = T("Tasks could not be loaded. Existing data was preserved.", "Sarcinile nu au putut fi încărcate. Datele existente au fost păstrate."); }
+    }
+
+    private async void OnSearchChanged(object sender, TextChangedEventArgs e) => await RefreshTasksAsync();
+    private async void OnFilterChanged(object sender, SelectionChangedEventArgs e) => await RefreshTasksAsync();
+    private void OnTaskSelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateTaskActions();
+
+    private void UpdateTaskActions()
+    {
+        var task = TaskGrid.SelectedItem as WorkTask;
+        CompleteTaskButton.IsEnabled = !_tasksBusy && task?.Status == "Open";
+        ReopenTaskButton.IsEnabled = !_tasksBusy && task is { Status: "Done" or "Archived" };
+        ArchiveTaskButton.IsEnabled = !_tasksBusy && task is { Status: "Open" or "Done" };
+        DeleteTaskButton.IsEnabled = !_tasksBusy && task is not null;
+        if (task is null) return;
+        _editing = task;
+        TaskTitleBox.Text = task.Title;
+        TaskNotesBox.Text = task.Notes;
+        TaskDuePicker.SelectedDate = task.DueDate?.ToDateTime(TimeOnly.MinValue);
+        TaskPriorityBox.SelectedIndex = task.Priority switch { "Low" => 0, "High" => 2, "Urgent" => 3, _ => 1 };
+        EditorHeading.Text = T("Edit task", "Editează sarcina");
+    }
+
+    private void OnCancelEdit(object sender, RoutedEventArgs e) => ClearEditor();
+    private void ClearEditor()
+    {
+        _editing = null;
+        TaskGrid.SelectedItem = null;
+        TaskTitleBox.Clear();
+        TaskNotesBox.Clear();
+        TaskDuePicker.SelectedDate = null;
+        TaskPriorityBox.SelectedIndex = 1;
+        EditorHeading.Text = T("New task", "Sarcină nouă");
+    }
+
+    private async void OnQuickTitleKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter) return;
+        e.Handled = true;
+        await AddQuickAsync();
+    }
+    private async void OnQuickAdd(object sender, RoutedEventArgs e) => await AddQuickAsync();
+    private async Task AddQuickAsync()
+    {
+        var title = QuickTitleBox.Text.Trim();
+        if (title.Length == 0) { QuickTitleBox.Focus(); return; }
+        await RunTaskActionAsync(async () =>
+        {
+            await _tasks.CreateAsync(title, cancellationToken: _lifetime.Token);
+            QuickTitleBox.Clear();
+        });
+    }
+
+    private async void OnSaveTask(object sender, RoutedEventArgs e)
+    {
+        var title = TaskTitleBox.Text.Trim();
+        if (title.Length == 0) { TaskTitleBox.Focus(); return; }
+        await RunTaskActionAsync(async () =>
+        {
+            var advanced = _preferences.Mode == "Advanced";
+            var notes = advanced ? TaskNotesBox.Text : _editing?.Notes ?? "";
+            var due = advanced ? (TaskDuePicker.SelectedDate is DateTime date ? DateOnly.FromDateTime(date) : null) : _editing?.DueDate;
+            var priority = advanced ? (TaskPriorityBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Normal" : _editing?.Priority ?? "Normal";
+            if (_editing is null)
+                await _tasks.CreateAsync(title, notes, due, priority, cancellationToken: _lifetime.Token);
+            else
+                await _tasks.UpdateAsync(_editing with { Title = title, Notes = notes, DueDate = due, Priority = priority }, _lifetime.Token);
+            ClearEditor();
+        });
+    }
+
+    private async void OnCompleteTask(object sender, RoutedEventArgs e) => await ChangeStatusAsync("Done");
+    private async void OnReopenTask(object sender, RoutedEventArgs e) => await ChangeStatusAsync("Open");
+    private async void OnArchiveTask(object sender, RoutedEventArgs e) => await ChangeStatusAsync("Archived");
+    private async Task ChangeStatusAsync(string status)
+    {
+        if (TaskGrid.SelectedItem is not WorkTask selected) return;
+        await RunTaskActionAsync(async () =>
+        {
+            await _tasks.SetStatusAsync(selected.Id, status, _lifetime.Token);
+            ClearEditor();
+        });
+    }
+    private async void OnDeleteTask(object sender, RoutedEventArgs e)
+    {
+        if (TaskGrid.SelectedItem is not WorkTask selected) return;
+        if (MessageBox.Show(this, T($"Permanently delete '{selected.Title}'?", $"Ștergi definitiv '{selected.Title}'?"),
+            T("Confirm deletion", "Confirmă ștergerea"), MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+        await RunTaskActionAsync(async () =>
+        {
+            await _tasks.DeleteAsync(selected.Id, _lifetime.Token);
+            ClearEditor();
+        });
+    }
+    private async Task RunTaskActionAsync(Func<Task> action)
+    {
+        if (!_ready || _tasksBusy) return;
+        _tasksBusy = true;
+        SaveTaskButton.IsEnabled = false;
+        QuickAddButton.IsEnabled = false;
+        UpdateTaskActions();
+        TaskErrorText.Text = "";
+        try { await action(); await RefreshTasksAsync(); }
+        catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
+        catch (ArgumentException ex) { TaskErrorText.Text = ex.Message; }
+        catch (Exception) { TaskErrorText.Text = T("Task change failed. Existing data was preserved.", "Modificarea sarcinii a eșuat. Datele existente au fost păstrate."); }
+        finally
+        {
+            _tasksBusy = false;
+            SaveTaskButton.IsEnabled = true;
+            QuickAddButton.IsEnabled = true;
+            UpdateTaskActions();
+        }
     }
 
     private void RenderStatus()

@@ -5,7 +5,7 @@ namespace FinanceOS.Infrastructure;
 
 public sealed class SqliteAppStore : IAppStore
 {
-    public const int CurrentSchemaVersion = 2;
+    public const int CurrentSchemaVersion = 3;
     private readonly string _path;
 
     public SqliteAppStore(string path)
@@ -52,6 +52,41 @@ public sealed class SqliteAppStore : IAppStore
                 );
                 INSERT INTO workspace_preferences VALUES (1, 'Light', 'en', 'Simple', 0);
                 PRAGMA user_version = 2;
+                """);
+        }
+        if (version <= 2)
+        {
+            Execute(connection, transaction, """
+                CREATE TABLE projects (
+                    id TEXT PRIMARY KEY, name TEXT NOT NULL CHECK (length(trim(name)) BETWEEN 1 AND 120),
+                    created_utc TEXT NOT NULL
+                );
+                CREATE TABLE categories (
+                    id TEXT PRIMARY KEY, name TEXT NOT NULL CHECK (length(trim(name)) BETWEEN 1 AND 80)
+                );
+                CREATE TABLE tasks (
+                    id TEXT PRIMARY KEY, title TEXT NOT NULL CHECK (length(trim(title)) BETWEEN 1 AND 300),
+                    notes TEXT NOT NULL DEFAULT '', due_date TEXT,
+                    priority TEXT NOT NULL DEFAULT 'Normal' CHECK (priority IN ('Low','Normal','High','Urgent')),
+                    status TEXT NOT NULL DEFAULT 'Open' CHECK (status IN ('Open','Done','Archived')),
+                    project_id TEXT REFERENCES projects(id) ON DELETE SET NULL,
+                    category_id TEXT REFERENCES categories(id) ON DELETE SET NULL,
+                    created_utc TEXT NOT NULL, updated_utc TEXT NOT NULL
+                );
+                CREATE INDEX ix_tasks_status_due ON tasks(status, due_date);
+                CREATE INDEX ix_tasks_project ON tasks(project_id);
+                CREATE TABLE task_references (
+                    id TEXT PRIMARY KEY, task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+                    label TEXT NOT NULL, value TEXT NOT NULL
+                );
+                CREATE INDEX ix_task_references_task ON task_references(task_id);
+                CREATE TABLE checklist_items (
+                    id TEXT PRIMARY KEY, task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+                    title TEXT NOT NULL, is_done INTEGER NOT NULL DEFAULT 0 CHECK (is_done IN (0,1)),
+                    position INTEGER NOT NULL
+                );
+                CREATE INDEX ix_checklist_items_task ON checklist_items(task_id, position);
+                PRAGMA user_version = 3;
                 """);
         }
         cancellationToken.ThrowIfCancellationRequested();
