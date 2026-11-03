@@ -30,6 +30,7 @@ public partial class MainWindow : Window, INotificationSink
         {
             _preferences = await _store.ReadPreferencesAsync(_lifetime.Token);
             _ready = true;
+            SetPreferenceButtons(true);
             ApplyTheme();
             Render();
         }
