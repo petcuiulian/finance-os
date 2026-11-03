@@ -1,7 +1,8 @@
+param([string]$ExecutablePath = "$PSScriptRoot/../artifacts/win-x64/FinanceOS.exe")
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName UIAutomationClient
 Add-Type -AssemblyName UIAutomationTypes
-$exe = Join-Path $PSScriptRoot '../artifacts/win-x64/FinanceOS.exe'
+$exe = (Resolve-Path $ExecutablePath).Path
 function Read-LaunchCount($window) {
     $elements = $window.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
     foreach ($element in $elements) {

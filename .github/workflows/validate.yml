@@ -21,6 +21,10 @@ jobs:
         run: dotnet test tests/FinanceOS.Tests -c Release --no-build --no-restore
       - name: Formatting and analyzers
         run: dotnet format FinanceOS.slnx --verify-no-changes --no-restore
+      - name: Development desktop smoke
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/smoke-windows.ps1 -ExecutablePath ./src/FinanceOS.Desktop/bin/Release/net10.0-windows/FinanceOS.exe
       - name: Publish Windows folder
         if: runner.os == 'Windows'
         shell: pwsh
