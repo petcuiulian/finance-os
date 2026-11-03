@@ -90,6 +90,30 @@ public sealed class TaskTests : IDisposable
     }
 
     [Fact]
+    public async Task Version3DatabaseKeepsTasksWhenTrashColumnIsAdded()
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(Database)!);
+        using (var db = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = Database, Pooling = false }.ToString()))
+        {
+            db.Open();
+            using var cmd = db.CreateCommand();
+            cmd.CommandText = """
+                CREATE TABLE app_state (id INTEGER PRIMARY KEY, launch_count INTEGER NOT NULL);
+                INSERT INTO app_state VALUES (1,2);
+                CREATE TABLE tasks (id TEXT PRIMARY KEY,title TEXT NOT NULL,notes TEXT NOT NULL,due_date TEXT,
+                    priority TEXT NOT NULL,status TEXT NOT NULL,project_id TEXT,category_id TEXT,
+                    created_utc TEXT NOT NULL,updated_utc TEXT NOT NULL);
+                INSERT INTO tasks VALUES ('existing','Existing task','','2026-11-04','High','Open',NULL,NULL,
+                    '2026-11-03T12:00:00+00:00','2026-11-03T12:00:00+00:00');
+                PRAGMA user_version=3;
+                """;
+            cmd.ExecuteNonQuery();
+        }
+        Assert.Equal(new StorageStatus(4, 3), await new SqliteAppStore(Database).OpenSessionAsync());
+        Assert.Equal("Existing task", Assert.Single(await Tasks.ListAsync(new TaskQuery("Tasks"))).Title);
+    }
+
+    [Fact]
     public async Task InvalidInputAndForeignKeyFailureDoNotCreateTask()
     {
         await OpenAsync();

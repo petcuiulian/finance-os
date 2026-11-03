@@ -36,6 +36,8 @@ public partial class MainWindow : Window, INotificationSink
             _preferences = await _store.ReadPreferencesAsync(_lifetime.Token);
             _ready = true;
             SetPreferenceButtons(true);
+            QuickAddButton.IsEnabled = true;
+            SaveTaskButton.IsEnabled = true;
             ApplyTheme();
             Render();
             await RefreshTasksAsync();
@@ -249,6 +251,16 @@ public partial class MainWindow : Window, INotificationSink
         TaskDuePicker.SelectedDate = null;
         TaskPriorityBox.SelectedIndex = 1;
         EditorHeading.Text = T("New task", "Sarcină nouă");
+    }
+
+    private void OnPreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.N && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+        {
+            QuickTitleBox.Focus();
+            QuickTitleBox.SelectAll();
+            e.Handled = true;
+        }
     }
 
     private async void OnQuickTitleKeyDown(object sender, KeyEventArgs e)
