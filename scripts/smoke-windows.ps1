@@ -6,7 +6,7 @@ $exe = (Resolve-Path $ExecutablePath).Path
 function Read-LaunchCount($window) {
     $elements = $window.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
     foreach ($element in $elements) {
-        if ($element.Current.Name -match '(?:Local SQLite ready · schema|SQLite local pregătit · schema) 3 · (?:workspace launches|porniri) (\d+)$') { return [long]$Matches[1] }
+        if ($element.Current.Name -match '(?:Local SQLite ready · schema|SQLite local pregătit · schema) 4 · (?:workspace launches|porniri) (\d+)$') { return [long]$Matches[1] }
     }
     return $null
 }

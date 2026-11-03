@@ -34,6 +34,21 @@ public sealed class TaskTests : IDisposable
         Assert.Single(await Tasks.ListAsync(new TaskQuery("Tasks")));
         await Tasks.DeleteAsync(created.Id);
         Assert.Empty(await second.ListAsync(new TaskQuery("Tasks")));
+        Assert.Single(await second.ListAsync(new TaskQuery("Trash")));
+        await Tasks.RestoreAsync(created.Id);
+        Assert.Single(await second.ListAsync(new TaskQuery("Tasks")));
+    }
+
+    [Fact]
+    public async Task TrashRestoreKeepsCompletedState()
+    {
+        await OpenAsync();
+        var task = await Tasks.CreateAsync("Approved invoice");
+        await Tasks.SetStatusAsync(task.Id, "Done");
+        await Tasks.DeleteAsync(task.Id);
+        Assert.Equal("Deleted", Assert.Single(await Tasks.ListAsync(new TaskQuery("Trash"))).Status);
+        await new SqliteTaskStore(Database).RestoreAsync(task.Id);
+        Assert.Equal("Done", Assert.Single(await Tasks.ListAsync(new TaskQuery("Tasks"))).Status);
     }
 
     [Fact]
@@ -55,7 +70,7 @@ public sealed class TaskTests : IDisposable
     public async Task M1MigrationKeepsPreferencesAndAddsTaskTables()
     {
         Directory.CreateDirectory(Path.GetDirectoryName(Database)!);
-        using (var db = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = Database }.ToString()))
+        using (var db = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = Database, Pooling = false }.ToString()))
         {
             db.Open();
             using var cmd = db.CreateCommand();
@@ -69,7 +84,7 @@ public sealed class TaskTests : IDisposable
             cmd.ExecuteNonQuery();
         }
         var app = new SqliteAppStore(Database);
-        Assert.Equal(new StorageStatus(3, 5), await app.OpenSessionAsync());
+        Assert.Equal(new StorageStatus(4, 5), await app.OpenSessionAsync());
         Assert.Equal(new WorkspacePreferences("Dark", "ro", "Advanced", true), await app.ReadPreferencesAsync());
         Assert.Empty(await Tasks.ListAsync(new TaskQuery("Tasks")));
     }

@@ -5,7 +5,7 @@ namespace FinanceOS.Infrastructure;
 
 public sealed class SqliteAppStore : IAppStore
 {
-    public const int CurrentSchemaVersion = 3;
+    public const int CurrentSchemaVersion = 4;
     private readonly string _path;
 
     public SqliteAppStore(string path)
@@ -87,6 +87,14 @@ public sealed class SqliteAppStore : IAppStore
                 );
                 CREATE INDEX ix_checklist_items_task ON checklist_items(task_id, position);
                 PRAGMA user_version = 3;
+                """);
+        }
+        if (version <= 3)
+        {
+            Execute(connection, transaction, """
+                ALTER TABLE tasks ADD COLUMN deleted_utc TEXT;
+                CREATE INDEX ix_tasks_deleted ON tasks(deleted_utc);
+                PRAGMA user_version = 4;
                 """);
         }
         cancellationToken.ThrowIfCancellationRequested();

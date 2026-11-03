@@ -14,5 +14,6 @@ public interface ITaskStore
     Task UpdateAsync(WorkTask task, CancellationToken cancellationToken = default);
     Task SetStatusAsync(string id, string status, CancellationToken cancellationToken = default);
     Task DeleteAsync(string id, CancellationToken cancellationToken = default);
+    Task RestoreAsync(string id, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<WorkTask>> ListAsync(TaskQuery query, CancellationToken cancellationToken = default);
 }

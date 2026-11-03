@@ -14,6 +14,7 @@
      <Button x:Name="MyDayButton" Content="_My Day" Tag="MyDay" Click="OnNavigate" Style="{StaticResource NavButton}" />
      <Button x:Name="TasksButton" Content="_Tasks" Tag="Tasks" Click="OnNavigate" Style="{StaticResource NavButton}" />
      <Button x:Name="ArchiveButton" Content="_Archive" Tag="Archive" Click="OnNavigate" Style="{StaticResource NavButton}" />
+     <Button x:Name="TrashButton" Content="T_rash" Tag="Trash" Click="OnNavigate" Style="{StaticResource NavButton}" />
      <Button x:Name="CalendarButton" Content="Calendar · M3" IsEnabled="False" Style="{StaticResource NavButton}" />
      <Button x:Name="RemindersButton" Content="Reminders · M3" IsEnabled="False" Style="{StaticResource NavButton}" />
      <Button x:Name="WorkflowsButton" Content="Workflows · M4" IsEnabled="False" Style="{StaticResource NavButton}" />
@@ -85,7 +86,7 @@
        <Button x:Name="CompleteTaskButton" Content="_Complete" Click="OnCompleteTask" Margin="0,0,8,8" IsEnabled="False" />
        <Button x:Name="ReopenTaskButton" Content="_Reopen" Click="OnReopenTask" Margin="0,0,8,8" IsEnabled="False" />
        <Button x:Name="ArchiveTaskButton" Content="_Archive" Click="OnArchiveTask" Margin="0,0,8,8" IsEnabled="False" />
-       <Button x:Name="DeleteTaskButton" Content="_Delete…" Click="OnDeleteTask" Margin="0,0,8,8" IsEnabled="False" />
+       <Button x:Name="DeleteTaskButton" Content="Move to _trash…" Click="OnDeleteTask" Margin="0,0,8,8" IsEnabled="False" />
       </WrapPanel>
       <Border Style="{StaticResource Card}"><StackPanel>
        <TextBlock x:Name="EditorHeading" Text="New task" Style="{StaticResource SectionTitle}" />

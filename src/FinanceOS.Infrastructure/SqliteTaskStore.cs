@@ -56,37 +56,53 @@ public sealed class SqliteTaskStore(string path) : ITaskStore
         cancellationToken.ThrowIfCancellationRequested();
         using var db = Open();
         using var command = db.CreateCommand();
-        command.CommandText = "UPDATE tasks SET status=$status,updated_utc=$now WHERE id=$id;";
+        command.CommandText = "UPDATE tasks SET status=$status,deleted_utc=NULL,updated_utc=$now WHERE id=$id;";
         command.Parameters.AddWithValue("$status", status);
         command.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture));
         command.Parameters.AddWithValue("$id", id);
         if (command.ExecuteNonQuery() != 1) throw new KeyNotFoundException("Task was not found.");
     }, cancellationToken);
 
+    // Deletion is recoverable. M6 may add an explicit permanent purge after backup policy is settled.
     public Task DeleteAsync(string id, CancellationToken cancellationToken = default) => Task.Run(() =>
     {
         cancellationToken.ThrowIfCancellationRequested();
         using var db = Open();
         using var command = db.CreateCommand();
-        command.CommandText = "DELETE FROM tasks WHERE id=$id;";
+        command.CommandText = "UPDATE tasks SET deleted_utc=$now,updated_utc=$now WHERE id=$id AND deleted_utc IS NULL;";
+        command.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture));
         command.Parameters.AddWithValue("$id", id);
-        if (command.ExecuteNonQuery() != 1) throw new KeyNotFoundException("Task was not found.");
+        if (command.ExecuteNonQuery() != 1) throw new KeyNotFoundException("Task was not found or is already in Trash.");
+    }, cancellationToken);
+
+    public Task RestoreAsync(string id, CancellationToken cancellationToken = default) => Task.Run(() =>
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        using var db = Open();
+        using var command = db.CreateCommand();
+        command.CommandText = "UPDATE tasks SET deleted_utc=NULL,updated_utc=$now WHERE id=$id AND deleted_utc IS NOT NULL;";
+        command.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture));
+        command.Parameters.AddWithValue("$id", id);
+        if (command.ExecuteNonQuery() != 1) throw new KeyNotFoundException("Task was not found in Trash.");
     }, cancellationToken);
 
     public Task<IReadOnlyList<WorkTask>> ListAsync(TaskQuery query, CancellationToken cancellationToken = default) => Task.Run<IReadOnlyList<WorkTask>>(() =>
     {
         ArgumentNullException.ThrowIfNull(query);
-        if (query.View is not ("Tasks" or "MyDay" or "Archive" or "Overview")) throw new ArgumentException("Invalid view.");
+        if (query.View is not ("Tasks" or "MyDay" or "Archive" or "Trash" or "Overview")) throw new ArgumentException("Invalid view.");
         if (query.Filter is not ("All" or "Open" or "Done")) throw new ArgumentException("Invalid filter.");
         cancellationToken.ThrowIfCancellationRequested();
         using var db = Open();
         using var command = db.CreateCommand();
         command.CommandText = """
-            SELECT id,title,notes,due_date,priority,status,project_id,category_id,created_utc,updated_utc
+            SELECT id,title,notes,due_date,priority,
+                   CASE WHEN deleted_utc IS NOT NULL THEN 'Deleted' ELSE status END,
+                   project_id,category_id,created_utc,updated_utc
             FROM tasks WHERE
-              (($view='Archive' AND status='Archived') OR
-               ($view='MyDay' AND status='Open' AND due_date IS NOT NULL AND due_date <= $today) OR
-               ($view IN ('Tasks','Overview') AND status!='Archived'))
+              (($view='Archive' AND status='Archived' AND deleted_utc IS NULL) OR
+               ($view='Trash' AND deleted_utc IS NOT NULL) OR
+               ($view='MyDay' AND deleted_utc IS NULL AND status='Open' AND due_date IS NOT NULL AND due_date <= $today) OR
+               ($view IN ('Tasks','Overview') AND deleted_utc IS NULL AND status!='Archived'))
               AND ($filter='All' OR status=$filter)
               AND ($search='' OR instr(lower(title),lower($search))>0 OR instr(lower(notes),lower($search))>0)
             ORDER BY CASE WHEN due_date IS NULL THEN 1 ELSE 0 END, due_date,

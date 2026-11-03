@@ -132,14 +132,15 @@ public partial class MainWindow : Window, INotificationSink
     {
         OverviewPanel.Visibility = _page == "Overview" ? Visibility.Visible : Visibility.Collapsed;
         SettingsPanel.Visibility = _page == "Settings" ? Visibility.Visible : Visibility.Collapsed;
-        TaskPanel.Visibility = _page is "Tasks" or "MyDay" or "Archive" ? Visibility.Visible : Visibility.Collapsed;
-        TaskHeading.Text = T(_page, _page switch { "MyDay" => "Ziua mea", "Tasks" => "Sarcini", "Archive" => "Arhivă", _ => _page });
+        TaskPanel.Visibility = _page is "Tasks" or "MyDay" or "Archive" or "Trash" ? Visibility.Visible : Visibility.Collapsed;
+        TaskHeading.Text = T(_page, _page switch { "MyDay" => "Ziua mea", "Tasks" => "Sarcini", "Archive" => "Arhivă", "Trash" => "Coș", _ => _page });
         PageTitle.Text = T(_page, _page == "Overview" ? "Prezentare" : "Setări");
         OverviewButton.SetResourceReference(Button.BackgroundProperty, _page == "Overview" ? "AccentSubtleBrush" : "SurfaceBrush");
         SettingsButton.SetResourceReference(Button.BackgroundProperty, _page == "Settings" ? "AccentSubtleBrush" : "SurfaceBrush");
         MyDayButton.SetResourceReference(Button.BackgroundProperty, _page == "MyDay" ? "AccentSubtleBrush" : "SurfaceBrush");
         TasksButton.SetResourceReference(Button.BackgroundProperty, _page == "Tasks" ? "AccentSubtleBrush" : "SurfaceBrush");
         ArchiveButton.SetResourceReference(Button.BackgroundProperty, _page == "Archive" ? "AccentSubtleBrush" : "SurfaceBrush");
+        TrashButton.SetResourceReference(Button.BackgroundProperty, _page == "Trash" ? "AccentSubtleBrush" : "SurfaceBrush");
     }
 
     private string T(string english, string romanian) => _preferences.Language == "ro" ? romanian : english;
@@ -154,6 +155,8 @@ public partial class MainWindow : Window, INotificationSink
         MyDayButton.Content = T("_My Day", "_Ziua mea");
         TasksButton.Content = T("_Tasks", "_Sarcini");
         ArchiveButton.Content = T("_Archive", "_Arhivă");
+        TrashButton.Content = T("T_rash", "_Coș");
+        DeleteTaskButton.Content = T("Move to _trash…", "Mută în _coș…");
         AdvancedFieldsPanel.Visibility = _preferences.Mode == "Advanced" ? Visibility.Visible : Visibility.Collapsed;
         CalendarButton.Content = T("Calendar · M3", "Calendar · M3");
         RemindersButton.Content = T("Reminders · M3", "Mementouri · M3");
@@ -223,9 +226,10 @@ public partial class MainWindow : Window, INotificationSink
     {
         var task = TaskGrid.SelectedItem as WorkTask;
         CompleteTaskButton.IsEnabled = !_tasksBusy && task?.Status == "Open";
-        ReopenTaskButton.IsEnabled = !_tasksBusy && task is { Status: "Done" or "Archived" };
+        ReopenTaskButton.IsEnabled = !_tasksBusy && task is { Status: "Done" or "Archived" or "Deleted" };
+        ReopenTaskButton.Content = task?.Status == "Deleted" ? T("_Restore", "_Restaurează") : T("_Reopen", "_Redeschide");
         ArchiveTaskButton.IsEnabled = !_tasksBusy && task is { Status: "Open" or "Done" };
-        DeleteTaskButton.IsEnabled = !_tasksBusy && task is not null;
+        DeleteTaskButton.IsEnabled = !_tasksBusy && task is not null && task.Status != "Deleted";
         if (task is null) return;
         _editing = task;
         TaskTitleBox.Text = task.Title;
@@ -284,7 +288,12 @@ public partial class MainWindow : Window, INotificationSink
     }
 
     private async void OnCompleteTask(object sender, RoutedEventArgs e) => await ChangeStatusAsync("Done");
-    private async void OnReopenTask(object sender, RoutedEventArgs e) => await ChangeStatusAsync("Open");
+    private async void OnReopenTask(object sender, RoutedEventArgs e)
+    {
+        if (TaskGrid.SelectedItem is WorkTask { Status: "Deleted" } selected)
+            await RunTaskActionAsync(async () => { await _tasks.RestoreAsync(selected.Id, _lifetime.Token); ClearEditor(); });
+        else await ChangeStatusAsync("Open");
+    }
     private async void OnArchiveTask(object sender, RoutedEventArgs e) => await ChangeStatusAsync("Archived");
     private async Task ChangeStatusAsync(string status)
     {
@@ -298,8 +307,8 @@ public partial class MainWindow : Window, INotificationSink
     private async void OnDeleteTask(object sender, RoutedEventArgs e)
     {
         if (TaskGrid.SelectedItem is not WorkTask selected) return;
-        if (MessageBox.Show(this, T($"Permanently delete '{selected.Title}'?", $"Ștergi definitiv '{selected.Title}'?"),
-            T("Confirm deletion", "Confirmă ștergerea"), MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+        if (MessageBox.Show(this, T($"Move '{selected.Title}' to Trash? You can restore it later.", $"Muți '{selected.Title}' în Coș? O poți restaura ulterior."),
+            T("Move to Trash", "Mută în Coș"), MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
         await RunTaskActionAsync(async () =>
         {
             await _tasks.DeleteAsync(selected.Id, _lifetime.Token);
