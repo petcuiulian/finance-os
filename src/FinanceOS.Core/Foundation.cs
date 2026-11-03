@@ -2,9 +2,13 @@ namespace FinanceOS.Core;
 
 public sealed record StorageStatus(int SchemaVersion, long LaunchCount);
 
+public sealed record WorkspacePreferences(string Theme, string Language, string Mode, bool OnboardingComplete);
+
 public interface IAppStore
 {
     Task<StorageStatus> OpenSessionAsync(CancellationToken cancellationToken = default);
+    Task<WorkspacePreferences> ReadPreferencesAsync(CancellationToken cancellationToken = default);
+    Task SavePreferencesAsync(WorkspacePreferences preferences, CancellationToken cancellationToken = default);
     Task<StorageStatus> ReadStatusAsync(CancellationToken cancellationToken = default);
 }
 

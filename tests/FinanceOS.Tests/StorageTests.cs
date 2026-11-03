@@ -14,11 +14,34 @@ public sealed class StorageTests : IDisposable
     public async Task MigrationAndSessionSurviveReopening()
     {
         var first = await new SqliteAppStore(Database).OpenSessionAsync();
-        Assert.Equal(new StorageStatus(1, 1), first);
+        Assert.Equal(new StorageStatus(2, 1), first);
         var second = new SqliteAppStore(Database);
         Assert.Equal(first, await second.ReadStatusAsync());
-        Assert.Equal(new StorageStatus(1, 2), await second.OpenSessionAsync());
-        Assert.Equal(new StorageStatus(1, 2), await new SqliteAppStore(Database).ReadStatusAsync());
+        Assert.Equal(new StorageStatus(2, 2), await second.OpenSessionAsync());
+        Assert.Equal(new StorageStatus(2, 2), await new SqliteAppStore(Database).ReadStatusAsync());
+    }
+
+    [Fact]
+    public async Task ExistingM0DatabaseMigratesWithoutLosingLaunches()
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(Database)!);
+        Execute("CREATE TABLE app_state (id INTEGER PRIMARY KEY, launch_count INTEGER NOT NULL); INSERT INTO app_state VALUES (1, 7); PRAGMA user_version = 1;");
+        var store = new SqliteAppStore(Database);
+        Assert.Equal(new StorageStatus(2, 8), await store.OpenSessionAsync());
+        Assert.Equal(new WorkspacePreferences("Light", "en", "Simple", false), await store.ReadPreferencesAsync());
+    }
+
+    [Fact]
+    public async Task PreferencesPersistAcrossReopeningAndRejectInvalidValues()
+    {
+        var store = new SqliteAppStore(Database);
+        await store.OpenSessionAsync();
+        var settings = new WorkspacePreferences("Dark", "ro", "Advanced", true);
+        await store.SavePreferencesAsync(settings);
+        Assert.Equal(settings, await new SqliteAppStore(Database).ReadPreferencesAsync());
+        await Assert.ThrowsAsync<ArgumentException>(() => store.SavePreferencesAsync(settings with { Theme = "Unknown" }));
+        Assert.Equal(settings, await store.ReadPreferencesAsync());
+        Assert.Equal(1, (await store.ReadStatusAsync()).LaunchCount);
     }
 
     [Fact]

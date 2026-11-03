@@ -6,11 +6,26 @@ $exe = (Resolve-Path $ExecutablePath).Path
 function Read-LaunchCount($window) {
     $elements = $window.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
     foreach ($element in $elements) {
-        if ($element.Current.Name -match '^Local SQLite ready · schema 1 · workspace launches (\d+)$') { return [long]$Matches[1] }
+        if ($element.Current.Name -match '(?:Local SQLite ready · schema|SQLite local pregătit · schema) 2 · (?:workspace launches|porniri) (\d+)$') { return [long]$Matches[1] }
     }
     return $null
 }
-function Run-Smoke {
+function Find-ById($window, $id) {
+    $condition = [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::AutomationIdProperty, $id)
+    return $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $condition)
+}
+function Invoke-ById($window, $id) {
+    $button = Find-ById $window $id
+    $deadline = (Get-Date).AddSeconds(5)
+    while ($null -ne $button -and !$button.Current.IsEnabled -and (Get-Date) -lt $deadline) {
+        Start-Sleep -Milliseconds 100
+        $button = Find-ById $window $id
+    }
+    if ($null -eq $button -or !$button.Current.IsEnabled) { throw "Missing or disabled control: $id" }
+    $pattern = $button.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
+    $pattern.Invoke()
+}
+function Run-Smoke([bool]$changePreferences) {
     $process = Start-Process $exe -PassThru
     try {
         $deadline = (Get-Date).AddSeconds(30)
@@ -27,20 +42,30 @@ function Run-Smoke {
         }
         if ($null -eq $count) { throw 'SQLite ready state was not visible within 30 seconds.' }
         foreach ($id in @('CheckStorageButton', 'TestNoticeButton')) {
-            $condition = [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::AutomationIdProperty, $id)
-            $button = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $condition)
-            if ($null -eq $button -or !$button.Current.IsEnabled) { throw "Missing or disabled control: $id" }
-            $pattern = $button.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
-            $pattern.Invoke()
+            Invoke-ById $window $id
         }
-        $condition = [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::AutomationIdProperty, 'NoticeText')
         $deadline = (Get-Date).AddSeconds(5)
         do {
-            $notice = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $condition)
-            if ($notice.Current.Name -like '*local notification adapter is working*') { break }
+            $notice = Find-ById $window 'NoticeText'
+            if ($notice.Current.Name -match 'local notification adapter is working|Notificarea locală funcționează') { break }
             Start-Sleep -Milliseconds 100
         } while ((Get-Date) -lt $deadline)
-        if ($notice.Current.Name -notlike '*local notification adapter is working*') { throw 'Notification action failed.' }
+        if ($notice.Current.Name -notmatch 'local notification adapter is working|Notificarea locală funcționează') { throw 'Notification action failed.' }
+        if ($changePreferences) {
+            $onboarding = Find-ById $window 'DismissOnboardingButton'
+            if ($null -ne $onboarding -and $onboarding.Current.IsEnabled) { Invoke-ById $window 'DismissOnboardingButton' }
+            if ((Find-ById $window 'SwitchModeButton').Current.Name -match 'Simple mode|Mod simplu') { Invoke-ById $window 'SwitchModeButton' }
+            if ((Find-ById $window 'SwitchThemeButton').Current.Name -match 'Dark theme|Temă închisă') { Invoke-ById $window 'SwitchThemeButton' }
+            if ((Find-ById $window 'SwitchLanguageButton').Current.Name -eq 'RO') { Invoke-ById $window 'SwitchLanguageButton' }
+        }
+        Invoke-ById $window 'SettingsButton'
+        $deadline = (Get-Date).AddSeconds(5)
+        do {
+            $preferences = Find-ById $window 'CurrentPreferencesText'
+            if ($preferences.Current.Name -match 'Dark.*ro.*Advanced') { break }
+            Start-Sleep -Milliseconds 100
+        } while ((Get-Date) -lt $deadline)
+        if ($preferences.Current.Name -notmatch 'Dark.*ro.*Advanced') { throw 'Preferences did not persist and render.' }
         return $count
     } finally {
         if (!$process.HasExited) {
@@ -50,7 +75,7 @@ function Run-Smoke {
         $process.Dispose()
     }
 }
-$first = Run-Smoke
-$second = Run-Smoke
+$first = Run-Smoke $true
+$second = Run-Smoke $false
 if ($second -ne ($first + 1)) { throw 'Session did not persist across desktop restart.' }
-Write-Output 'PASS: Windows launch, storage, in-app notice, close and restart persistence.'
+Write-Output 'PASS: Windows launch, storage, notice, navigation, preferences, close and restart persistence.'

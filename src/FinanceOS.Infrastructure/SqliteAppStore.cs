@@ -5,7 +5,7 @@ namespace FinanceOS.Infrastructure;
 
 public sealed class SqliteAppStore : IAppStore
 {
-    public const int CurrentSchemaVersion = 1;
+    public const int CurrentSchemaVersion = 2;
     private readonly string _path;
 
     public SqliteAppStore(string path)
@@ -40,6 +40,20 @@ public sealed class SqliteAppStore : IAppStore
                 PRAGMA user_version = 1;
                 """);
         }
+        if (version <= 1)
+        {
+            Execute(connection, transaction, """
+                CREATE TABLE workspace_preferences (
+                    id INTEGER PRIMARY KEY CHECK (id = 1),
+                    theme TEXT NOT NULL CHECK (theme IN ('Light', 'Dark')),
+                    language TEXT NOT NULL CHECK (language IN ('en', 'ro')),
+                    mode TEXT NOT NULL CHECK (mode IN ('Simple', 'Advanced')),
+                    onboarding_complete INTEGER NOT NULL CHECK (onboarding_complete IN (0, 1))
+                );
+                INSERT INTO workspace_preferences VALUES (1, 'Light', 'en', 'Simple', 0);
+                PRAGMA user_version = 2;
+                """);
+        }
         cancellationToken.ThrowIfCancellationRequested();
         Execute(connection, transaction, "UPDATE app_state SET launch_count = launch_count + 1 WHERE id = 1;");
         var launches = Convert.ToInt64(ExecuteScalar(connection, transaction, "SELECT launch_count FROM app_state WHERE id = 1;")
@@ -58,6 +72,41 @@ public sealed class SqliteAppStore : IAppStore
             ?? throw new InvalidDataException("Application state is missing."));
         command.CommandText = "PRAGMA user_version;";
         return new StorageStatus(Convert.ToInt32(command.ExecuteScalar()), launches);
+    }, cancellationToken);
+
+    public Task<WorkspacePreferences> ReadPreferencesAsync(CancellationToken cancellationToken = default) => Task.Run(() =>
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        using var connection = OpenConnection(readOnly: true);
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT theme, language, mode, onboarding_complete FROM workspace_preferences WHERE id = 1;";
+        using var reader = command.ExecuteReader();
+        if (!reader.Read()) throw new InvalidDataException("Workspace preferences are missing.");
+        return new WorkspacePreferences(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetInt32(3) == 1);
+    }, cancellationToken);
+
+    public Task SavePreferencesAsync(WorkspacePreferences preferences, CancellationToken cancellationToken = default) => Task.Run(() =>
+    {
+        ArgumentNullException.ThrowIfNull(preferences);
+        if (preferences.Theme is not ("Light" or "Dark") || preferences.Language is not ("en" or "ro") ||
+            preferences.Mode is not ("Simple" or "Advanced"))
+            throw new ArgumentException("Invalid workspace preference.", nameof(preferences));
+        cancellationToken.ThrowIfCancellationRequested();
+        using var connection = OpenConnection();
+        using var transaction = connection.BeginTransaction();
+        using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = """
+            UPDATE workspace_preferences SET theme = $theme, language = $language,
+            mode = $mode, onboarding_complete = $onboarding WHERE id = 1;
+            """;
+        command.Parameters.AddWithValue("$theme", preferences.Theme);
+        command.Parameters.AddWithValue("$language", preferences.Language);
+        command.Parameters.AddWithValue("$mode", preferences.Mode);
+        command.Parameters.AddWithValue("$onboarding", preferences.OnboardingComplete ? 1 : 0);
+        if (command.ExecuteNonQuery() != 1) throw new InvalidDataException("Workspace preferences are missing.");
+        cancellationToken.ThrowIfCancellationRequested();
+        transaction.Commit();
     }, cancellationToken);
 
     private SqliteConnection OpenConnection(bool readOnly = false)

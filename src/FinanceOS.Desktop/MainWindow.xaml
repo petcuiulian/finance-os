@@ -2,35 +2,72 @@
  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
  Title="FINANCE OS" Width="1100" Height="740" MinWidth="720" MinHeight="540"
  WindowStartupLocation="CenterScreen" Loaded="OnLoaded">
- <ScrollViewer VerticalScrollBarVisibility="Auto">
-  <Grid Margin="{StaticResource PagePadding}">
-   <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-   <StackPanel>
-    <TextBlock Text="FINANCE OS" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" />
-    <TextBlock Text="A calm place for focused work." FontSize="32" FontWeight="SemiBold" Margin="0,18,0,12" />
-    <TextBlock Text="Your private, offline workspace for finance operations." Foreground="{DynamicResource MutedBrush}" />
-   </StackPanel>
-   <Border Grid.Row="1" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
-     BorderThickness="1" CornerRadius="{StaticResource CardRadius}" Padding="28" Margin="0,32,0,24">
-    <StackPanel>
-     <TextBlock Text="Workspace foundation" FontSize="22" FontWeight="SemiBold" />
-     <TextBlock x:Name="StorageText" Text="Opening local storage…" Margin="0,16,0,12" AutomationProperties.LiveSetting="Polite" />
-     <TextBlock Text="Data stays in your Windows user profile. No account or network connection is required." Foreground="{DynamicResource MutedBrush}" />
-     <WrapPanel Margin="0,24,0,0">
-      <Button x:Name="CheckStorageButton" Content="_Check local storage" Click="OnCheckStorage" IsEnabled="False" Margin="0,0,12,12" />
-      <Button x:Name="TestNoticeButton" Content="Test _in-app notice" Click="OnTestNotice" Margin="0,0,0,12" />
-     </WrapPanel>
-     <TextBlock x:Name="NoticeText" Text="System notifications and scheduling arrive in M3. This app does not run after exit."
-       Foreground="{DynamicResource MutedBrush}" AutomationProperties.LiveSetting="Polite" />
+ <DockPanel LastChildFill="True">
+  <Border DockPanel.Dock="Left" Width="218" Padding="18,26" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+   <DockPanel LastChildFill="False">
+    <TextBlock DockPanel.Dock="Top" Text="FINANCE OS" FontSize="19" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="8,0,0,30" />
+    <StackPanel DockPanel.Dock="Top">
+     <TextBlock x:Name="NavigateLabel" Text="WORKSPACE" Style="{StaticResource EyebrowText}" Margin="8,0,0,8" />
+     <Button x:Name="OverviewButton" Content="_Overview" Tag="Overview" Click="OnNavigate" Style="{StaticResource NavButton}" />
+     <Button x:Name="SettingsButton" Content="_Settings" Tag="Settings" Click="OnNavigate" Style="{StaticResource NavButton}" />
+     <TextBlock x:Name="ComingSoonLabel" Text="COMING LATER" Style="{StaticResource EyebrowText}" Margin="8,26,0,8" />
+     <Button x:Name="MyDayButton" Content="My Day · M2" IsEnabled="False" Style="{StaticResource NavButton}" />
+     <Button x:Name="TasksButton" Content="Tasks · M2" IsEnabled="False" Style="{StaticResource NavButton}" />
+     <Button x:Name="CalendarButton" Content="Calendar · M3" IsEnabled="False" Style="{StaticResource NavButton}" />
+     <Button x:Name="RemindersButton" Content="Reminders · M3" IsEnabled="False" Style="{StaticResource NavButton}" />
+     <Button x:Name="WorkflowsButton" Content="Workflows · M4" IsEnabled="False" Style="{StaticResource NavButton}" />
+     <Button x:Name="ProjectsButton" Content="Projects · M4" IsEnabled="False" Style="{StaticResource NavButton}" />
+     <Button x:Name="AnalyticsButton" Content="Analytics · M5" IsEnabled="False" Style="{StaticResource NavButton}" />
     </StackPanel>
+   </DockPanel>
+  </Border>
+  <Grid>
+   <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+   <Border Grid.Row="0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="28,16">
+    <DockPanel LastChildFill="False">
+     <TextBlock x:Name="PageTitle" Text="Overview" FontSize="22" FontWeight="SemiBold" VerticalAlignment="Center" DockPanel.Dock="Left" />
+     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right">
+      <Button x:Name="SwitchModeButton" Content="Simple mode" Click="OnSwitchMode" Margin="0,0,8,0" AutomationProperties.HelpText="Switches presentation only; data is shared" />
+      <Button x:Name="SwitchThemeButton" Content="Dark theme" Click="OnSwitchTheme" Margin="0,0,8,0" />
+      <Button x:Name="SwitchLanguageButton" Content="RO" Click="OnSwitchLanguage" />
+     </StackPanel>
+    </DockPanel>
    </Border>
-   <StackPanel Grid.Row="2">
-    <TextBlock Text="What comes next" FontSize="20" FontWeight="SemiBold" />
-    <TextBlock Margin="0,12,0,0" Text="M1 · Design system, navigation, themes, language and workspace preferences."
-      Foreground="{DynamicResource MutedBrush}" />
-    <TextBlock Margin="0,8,0,0" Text="Task management, calendar, reminders and advanced workflows are planned modules and are not available in this foundation build."
-      Foreground="{DynamicResource MutedBrush}" />
-   </StackPanel>
+   <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="28,26" MaxWidth="860" HorizontalAlignment="Left">
+     <Border x:Name="OnboardingPanel" Style="{StaticResource Card}" Margin="0,0,0,20">
+      <StackPanel>
+       <TextBlock x:Name="WelcomeTitle" Text="Welcome to your private workspace" Style="{StaticResource SectionTitle}" />
+       <TextBlock x:Name="WelcomeBody" Text="Your settings are saved on this device. Tasks and planning arrive in the next milestones." Style="{StaticResource MutedText}" Margin="0,10,0,16" />
+       <Button x:Name="DismissOnboardingButton" Content="_Get started" Click="OnDismissOnboarding" HorizontalAlignment="Left" Style="{StaticResource PrimaryButton}" />
+      </StackPanel>
+     </Border>
+     <StackPanel x:Name="OverviewPanel">
+      <TextBlock x:Name="OverviewHeading" Text="A clear start to the day." FontSize="30" FontWeight="SemiBold" />
+      <TextBlock x:Name="OverviewDescription" Text="Your offline workspace is ready. Tasks, calendars and reminders will arrive in upcoming milestones." Style="{StaticResource MutedText}" Margin="0,8,0,22" />
+      <Border Style="{StaticResource Card}"><StackPanel>
+       <TextBlock x:Name="StorageHeading" Text="Local storage" Style="{StaticResource SectionTitle}" />
+       <TextBlock x:Name="StorageText" Text="Opening local storage…" Margin="0,14,0,12" AutomationProperties.LiveSetting="Polite" />
+       <TextBlock x:Name="PrivacyText" Text="Data stays in your Windows user profile." Style="{StaticResource MutedText}" />
+       <WrapPanel Margin="0,22,0,0">
+        <Button x:Name="CheckStorageButton" Content="_Check local storage" Click="OnCheckStorage" IsEnabled="False" Margin="0,0,10,10" />
+        <Button x:Name="TestNoticeButton" Content="Test _in-app notice" Click="OnTestNotice" Margin="0,0,0,10" />
+       </WrapPanel>
+       <TextBlock x:Name="NoticeText" Text="System notifications and scheduling arrive in M3. This app does not run after exit." Style="{StaticResource MutedText}" AutomationProperties.LiveSetting="Polite" />
+      </StackPanel></Border>
+     </StackPanel>
+     <StackPanel x:Name="SettingsPanel" Visibility="Collapsed">
+      <TextBlock x:Name="SettingsHeading" Text="Make the workspace yours." FontSize="30" FontWeight="SemiBold" />
+      <TextBlock x:Name="SettingsDescription" Text="These choices persist locally and apply to the same workspace." Style="{StaticResource MutedText}" Margin="0,8,0,22" />
+      <Border Style="{StaticResource Card}"><StackPanel>
+       <TextBlock x:Name="PreferencesHeading" Text="Preferences" Style="{StaticResource SectionTitle}" />
+       <TextBlock x:Name="CurrentPreferencesText" Margin="0,16,0,16" AutomationProperties.LiveSetting="Polite" />
+       <TextBlock x:Name="ModeDescription" Text="Simple and Advanced share the same data. Advanced features appear as they are built." Style="{StaticResource MutedText}" />
+       <TextBlock x:Name="UnavailableDescription" Text="Appearance, language and mode can be changed from the header." Style="{StaticResource MutedText}" Margin="0,12,0,0" />
+      </StackPanel></Border>
+     </StackPanel>
+    </StackPanel>
+   </ScrollViewer>
   </Grid>
- </ScrollViewer>
+ </DockPanel>
 </Window>
