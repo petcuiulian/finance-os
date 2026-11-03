@@ -1,6 +1,6 @@
 # Durable work log
 
-## 2026-11-04 — M0 foundation implemented; Windows gate pending
+## 2026-11-04 — M0 COMPLETE — READY FOR SOL MEDIUM
 - Imported the supplied starter into the empty `work` branch. `MASTER_SPEC.md` is byte-for-byte unchanged (SHA256 `8d815acd90b17bd7c6acb73309bfc3616b66b3ab4e7d3e807e58f217dafb63c2`).
 - Chose .NET 10/WPF over Tauri; see ADR 0001. Native Windows scope, no WebView2 dependency, single C#/XAML toolchain. SDK 10.0.403, Microsoft.Data.Sqlite 10.0.14, committed transitive locks.
 - Added Core/Infrastructure/Desktop/test projects, typed storage and notification boundaries, light/dark semantic resource dictionaries, readable resizable shell, real database status/check action and in-app notice action. No fake task controls or OS toast claims. Theme selection and all M1 work remain pending.
@@ -9,7 +9,8 @@
 - Fixed initial restore security failure by updating SQLite dependency to patched .NET 10 servicing release; no audit/verification suppression. Fixed publish lock mismatch by declaring win-x64 runtime graph for every project.
 - **PASS (Linux):** `scripts/check.sh` — locked restore, Release cross-build including WPF XAML (0 warnings/errors), 7/7 xUnit tests, format/analyzer verification. Tests cover fresh migration/reopening, newer schema rejection, failed migration rollback, corruption preservation, concurrent cold starts, cancellation and per-user path policy.
 - **PASS (Linux):** `dotnet publish src/FinanceOS.Desktop -c Release -r win-x64 --self-contained true -p:PublishTrimmed=false -p:PublishSingleFile=false -p:RestoreLockedMode=true -o artifacts/win-x64`. PE x64 GUI executable and SQLite DLL produced; whole output folder ~143 MB, not a RAM measurement.
-- **UNVERIFIED — Windows required:** WPF development/published launch, smoke script execution, visual/keyboard/accessibility/DPI checks, notification/tray lifecycle, clean-machine packaging/signing. PowerShell scripts/CI supplied but not claimed executed here.
+- **PASS (actual Windows CI):** [run 41729389594](https://github.com/petcuiulian/finance-os/actions/runs/41729389594), implementation commit `fb65280d22832fd349d02c2400c5b5f82df262a4`: locked restore, Release build, 7/7 tests, formatting/analyzers, development executable smoke, self-contained publish and published executable smoke. Both smoke runs verified visible storage ready state, storage/notice button actions, clean shutdown and restart counter persistence via Windows UI Automation. The Linux CI job also passed.
+- **UNVERIFIED — target Windows 10/11 laptop required:** visual/keyboard/accessibility/DPI review, notification/tray lifecycle, performance targets and clean-machine packaging/signing. Windows hosted-runner smoke is not corporate deployment certification.
 - Existing cloud SDK: `/workspace/.dotnet`; set PATH, DOTNET_CLI_HOME and NUGET_PACKAGES as in README. No repo worktree needed. App has no credentials or service prerequisites.
 - Windows CI first run passed build and 7 tests but caught Git CRLF checkout conflicting with EditorConfig. Added explicit LF checkout policy, preserving original master CRLF; added development-output smoke alongside published-output smoke.
-- **Next:** run Windows M0 launch/smoke checks and record their evidence; then hand off M1 design system to Sol Medium. Do not start M1 automatically. No features were removed or later milestones checked off.
+- **Next:** M1 design system with Sol Medium. M0 is implemented and its applicable checks pass. Stop here; no M1 implementation or later milestone was started. All original features remain in scope.

@@ -1,6 +1,6 @@
 # ADR 0001 — Native .NET/WPF desktop
 
-Accepted for M0, 2026-11-04. Windows runtime validation remains outstanding.
+Accepted for M0, 2026-11-04. Baseline Windows runtime validation passed in CI run 41729389594; enterprise laptop/release checks remain outstanding.
 
 | Criterion | Tauri 2 + React/TypeScript | .NET 10 + WPF |
 | --- | --- | --- |
@@ -45,7 +45,5 @@ verify Windows toasts/actions, sleep/restart, tray and consent-based startup. Ex
 M0 stops the app; it promises no background alarms.
 
 Build path: `scripts/check.ps1`, `scripts/publish-windows.ps1`, then
-`scripts/smoke-windows.ps1` on a Windows interactive desktop. A Windows CI job is
-provided, but its result is not claimed until it runs. Linux can compile the Windows
-target and run storage tests. Signing, installer, real Windows launch, accessibility,
-DPI and performance are separate unverified release checks.
+`scripts/smoke-windows.ps1` on a Windows interactive desktop. Windows CI run 41729389594 passed both development and published desktop smoke checks. Linux can compile the Windows
+target and run storage tests. Signing, installer, target-laptop accessibility, DPI and performance remain separate unverified release checks.

@@ -1,6 +1,6 @@
 # Proposed architecture — decision log
 
-**Status:** .NET 10/WPF selected in [ADR 0001](ADR-0001-desktop-stack.md). Core and SQLite are platform-neutral; Windows runtime and packaging verification are pending. The original logical modules and all product features remain in scope.
+**Status:** .NET 10/WPF selected in [ADR 0001](ADR-0001-desktop-stack.md). Core and SQLite are platform-neutral; Windows development/published launch smoke passed in CI; target-laptop and signed release packaging checks remain pending. The original logical modules and all product features remain in scope.
 
 ## Original candidate evaluated (superseded by ADR 0001)
 - **Desktop:** Tauri 2 / Rust host, React + TypeScript frontend, Vite, Tailwind CSS, shadcn/ui and Lucide; local SQLite persisted under Windows per-user AppData.

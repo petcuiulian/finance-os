@@ -3,7 +3,8 @@
 Offline-first Windows 10/11 finance productivity application. M0 introduces a native
 .NET 10/WPF window, local SQLite bootstrap and an in-app notification adapter. Task
 management and all later features remain planned in `docs/ROADMAP.md`; this is not a
-finished finance product.
+finished finance product. M0 checks passed on Linux and Windows, including development
+and published app launch/restart smoke tests ([CI evidence](https://github.com/petcuiulian/finance-os/actions/runs/41729389594)).
 
 ## Develop
 

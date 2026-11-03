@@ -7,11 +7,10 @@
 - [x] Choose stack, toolchain versions and a reproducible project scaffold; create basic app window and clean developer setup.
 - [x] Establish formatting, typing, tests, repository scripts, lint and build smoke checks.
 - [x] Establish persistent migration scheme, per-user data location and safe security defaults.
-**Gate status: implementation and Linux checks complete; Windows launch verification pending.**
-- Verified: locked restore, Release C#/XAML cross-build (zero warnings), seven integration tests, formatting/analyzers, self-contained win-x64 publish.
-- **UNVERIFIED — Windows required:** development launch, UI interaction/rendering, DPI/accessibility, published executable launch and clean-machine packaging. Run `scripts/check.ps1`, `dotnet run --project src/FinanceOS.Desktop`, then publish and `scripts/smoke-windows.ps1` on Windows.
-- M0 cannot be called fully verified until the desktop launch gate passes. Windows CI is configured; configuration alone is not a pass.
-
+**Gate: PASS.** [CI run 41729389594](https://github.com/petcuiulian/finance-os/actions/runs/41729389594) verified implementation commit `fb65280` on Linux and Windows.
+- Locked restore, Release C#/XAML build, seven integration tests and formatting/analyzers passed on both operating systems.
+- Windows development and self-contained published apps launched; UI Automation exercised storage and notice controls, clean close and restart persistence.
+- **UNVERIFIED — target Windows 10/11 laptop required:** visual/accessibility/DPI review, performance targets, clean-machine deployment and corporate signing/allowlisting. OS notifications/tray/resume remain M3/M6 work. These release checks are not claimed by M0's CI smoke test.
 
 ## M1 — Beautiful functional shell and design system
 - [ ] Implement premium light/dark design tokens, typography, UI primitives, sidebar/header, responsive Windows-friendly layout.
@@ -56,7 +55,7 @@
 **Gate:** independently verified desktop product; not just a working dev server.
 
 ## Current next task
-**Finish M0 Windows verification** using the documented launch/smoke commands. After that gate passes: **M1 — Design System (Sol Medium)**. M1 has not started. Keep the existing detailed M1–M6 milestones and all original features; the shorter model-routing table does not remove scope.
+**M1 — Design System (Sol Medium)**. M0 is complete; M1 has not started. Keep the existing detailed M1–M6 milestones and all original features; the shorter model-routing table does not remove scope.
 
 ## Scope management
 - No feature is canceled because it is in a later milestone.
