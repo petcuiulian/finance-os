@@ -1,10 +1,6 @@
 # FINANCE OS
 
-Offline-first Windows 10/11 finance productivity application. M0/M1 provide a native .NET 10/WPF window, local SQLite storage, a working
-Overview and Settings shell, persisted presentation preferences and an in-app notice. Task
-management and all later features remain planned in `docs/ROADMAP.md`; this is not a
-finished finance product. M0 checks passed on Linux and Windows, including development
-and published app launch/restart smoke tests ([M1 CI evidence](https://github.com/petcuiulian/finance-os/actions/runs/41733304661)).
+Offline-first Windows 10/11 finance productivity application. M0–M2 provide a native .NET 10/WPF shell, persistent preferences and a working local task manager. Quick Add, My Day, search, editing, completion, Archive and recoverable Trash work without login or network access. Calendar, reminders and advanced finance workflows remain on the roadmap. This is not the finished release product.
 
 ## Develop
 
@@ -22,10 +18,10 @@ dotnet run --project src/FinanceOS.Desktop
 ./scripts/smoke-windows.ps1
 ```
 
-The smoke script requires an interactive Windows desktop, writes only the app's
-per-user launch counter and opens/closes two instances sequentially. Do not run it
+The smoke script requires an interactive Windows desktop, creates a harmless local
+"M2 smoke task", and opens/closes two instances sequentially. Do not run it
 alongside another FINANCE OS instance. It verifies visible ready state, working
-buttons and restart durability. It does not certify toasts or release readiness.
+buttons, task capture and restart durability. It does not certify toasts or release readiness.
 
 The unsigned self-contained output is `artifacts/win-x64/FinanceOS.exe`. Distribute
 its **whole folder**, including native SQLite libraries. No administrator elevation
@@ -55,15 +51,11 @@ after dependency changes, then run all checks.
 
 ## Data and safety
 
-Windows data: `%LOCALAPPDATA%/FinanceOS/finance-os.db`. The database lives outside the
-executable directory. The version 2 schema stores a launch counter and theme, language, mode and
-onboarding preferences. A version 1 database migrates in place. It contains no task
-schema yet. Overview and Settings navigate with keyboard-accessible native buttons. Light/dark
-theme, EN/RO language and Simple/Advanced mode controls save immediately to the
-same SQLite database; the first-run welcome can be dismissed. Future modules are
-shown as disabled navigation items. "Check local storage" reads
-that database without incrementing the counter. "Test in-app notice" changes the
-in-app message and sends no OS toast. Closing the window ends the process.
+Windows data: `%LOCALAPPDATA%/FinanceOS/finance-os.db`. The database lives outside the executable directory. Schema v4 migrates previous versions in place. It stores preferences, tasks, projects, categories, references, checklist items and a recoverable Trash marker. Task actions currently cover the core list workflow; project/category/checklist editors and advanced workflow states remain later work.
+
+Use **Ctrl+N** to focus Quick Add, type a title and press Enter. Tasks and My Day show open work; choose a row to edit details or change its state. Simple mode keeps advanced details hidden while preserving them. Advanced mode exposes notes, date and priority. Archive and Trash have dedicated views; Restore returns a trashed task to its previous status. Move to Trash never erases the row. The app stores due *dates* as local calendar dates; reminder times and time zones belong to M3.
+
+Light/dark theme, EN/RO language and Simple/Advanced mode controls save immediately to the same SQLite database. The first-run welcome can be dismissed. Future modules are shown as disabled navigation items. "Check local storage" reads the database without incrementing the counter. "Test in-app notice" changes the in-app message and sends no OS toast. Closing the window ends the process.
 
 SQLite migrations and writes are transactional; foreign keys are enabled; newer
 schemas and corrupt files fail without reset. If startup fails, preserve the database,
@@ -73,10 +65,10 @@ No app telemetry, cloud access or external integrations are enabled.
 
 ## Structure and handoff
 
-- `src/FinanceOS.Core`: contracts and per-user path policy.
-- `src/FinanceOS.Infrastructure`: SQLite lifecycle and migrations.
+- `src/FinanceOS.Core`: contracts, task models and per-user path policy.
+- `src/FinanceOS.Infrastructure`: SQLite migrations, task queries and writes.
 - `src/FinanceOS.Desktop`: composition, WPF shell, theme resources, notices.
-- `tests/FinanceOS.Tests`: migration, corruption, concurrency and persistence tests.
+- `tests/FinanceOS.Tests`: migrations, integrity, task lifecycle and persistence tests.
 - `docs/ADR-0001-desktop-stack.md`: Tauri vs WPF decision and platform risks.
 - `docs/MASTER_SPEC.md`: unchanged complete original specification.
 - `docs/ROADMAP.md` and `docs/WORK_LOG.md`: milestone status and next task.

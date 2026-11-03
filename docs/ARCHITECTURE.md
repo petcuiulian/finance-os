@@ -19,7 +19,7 @@
 8. `diagnostics`: redacted logs, crash-safe errors and diagnostics export.
 
 ## Guardrails and design decisions
-- Keep domain decisions separate from React views and Tauri commands. Validate all IPC inputs; least privileges and restricted file handling.
+- Keep domain decisions separate from WPF views and SQLite statements. Validate inputs; use least privileges and restricted file handling.
 - Model due times/time zones explicitly; store absolute instants with time-zone metadata as needed for user-facing recurrences. Define DST and business-day behavior.
 - Transact all multi-step updates; use versioned migrations and compatibility checks. Prefer SQLite foreign-key enforcement, indexes for date/status/search, and a safe backup method.
 - Task/reminder states must be persisted before publishing notification effects. Design **idempotent** reconcile process to avoid duplicate alarms on resume/restart.
@@ -33,3 +33,6 @@ ADR 0001 evaluates candidate stacks against: WebView2 availability, corporate po
 
 ## M1 persistence extension
 SQLite schema v2 adds one typed, constrained workspace preference row for theme, language, mode and first-run completion. Version 1 databases migrate transactionally without replacing the launch counter. Both presentation modes use this same local database; task entities remain M2 scope.
+
+## M2 task data
+SQLite schema v3 adds tasks, projects, categories, external references and checklist rows with foreign keys and status/due indexes. Schema v4 adds a deletion marker without replacing existing task rows; Trash hides rows from normal views and Restore clears the marker while keeping the prior task status. Due dates are local calendar dates; exact instants, recurrence and reminder state require explicit timezone rules in M3. Single-row task changes are SQLite atomic statements. WPF views call a typed task store; the same database backs both presentation modes. Optional future task fields are planned, not removed.

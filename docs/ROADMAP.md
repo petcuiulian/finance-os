@@ -21,11 +21,13 @@
 - **UNVERIFIED — target Windows laptop/manual review required:** fine visual polish, contrast and assistive technology, high DPI and narrow-screen behavior. These remain release quality checks; UI behavior was exercised on a Windows hosted runner.
 
 ## M2 — Real local task manager
-- [ ] Define SQLite task/project/category/reference/checklist model, migrations and transactions.
-- [ ] Implement create/edit/complete/archive/restore/delete safely; status and priority.
-- [ ] My Day, task list, due dates, quick capture, sortable/filterable search; smoke tests and restart persistence.
-- [ ] Ensure quick creation is effortless in Simple Mode and advanced fields can be added without data loss.
-**Gate:** actually usable personal task manager; task data survives restart and version upgrade.
+- [x] Define SQLite task/project/category/reference/checklist model with foreign keys, indexes and versioned migrations.
+- [x] Implement create/edit/complete/archive/restore and recoverable delete; support status and priority.
+- [x] Provide My Day, task list, due dates, quick capture, sorting/filtering and search; verify restart persistence and version 3 task upgrade.
+- [x] Keep quick creation available in Simple Mode and preserve notes, due date and priority when advanced fields are hidden.
+**Gate: PASS.** [CI run 41735248313](https://github.com/petcuiulian/finance-os/actions/runs/41735248313) verified implementation commit `974c63d` on Linux and Windows: locked restore, Release build, formatting and 15 tests. Windows development and published app smoke checks exercised task capture and visibility after restart. CRUD, filters, migration and Trash recovery are covered by integration tests.
+- Project/category/reference/checklist tables are foundation for later editors; advanced workflow fields, reminders and calendar remain in M3–M5. No feature from the master specification is removed.
+- **UNVERIFIED — target Windows laptop/manual review required:** accessibility, high DPI, visual polish, large data performance and corporate deployment. UI Automation covers the core quick-capture flow on a Windows hosted runner.
 
 ## M3 — Reminder and calendar reliability
 - [ ] Design reminder DB, scheduling, recurrence, snooze, dismiss, duplicate prevention and missed-alarm reconciliation.
@@ -56,7 +58,7 @@
 **Gate:** independently verified desktop product; not just a working dev server.
 
 ## Current next task
-**M2 — Real local task manager (Sol Medium).** M1 is complete; M2 has not started. Keep the existing detailed M1–M6 milestones and all original features; the shorter model-routing table does not remove scope.
+**M3 — Reminder and calendar reliability (Astra High).** M2 is complete; M3 has not started. Keep the existing detailed M1–M6 milestones and all original features; the shorter model-routing table does not remove scope.
 
 ## Scope management
 - No feature is canceled because it is in a later milestone.

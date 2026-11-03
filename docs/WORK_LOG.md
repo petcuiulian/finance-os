@@ -1,5 +1,13 @@
 # Durable work log
 
+## 2026-11-04 — M2 complete; M3 next
+- Added version 3 task/project/category/reference/checklist schema and version 4 Trash marker. Version 1–3 upgrades preserve existing settings and tasks. Due dates are local calendar dates; exact reminder instants/timezones remain M3 work.
+- Added quick capture (Ctrl+N), Tasks/My Day/Archive/Trash views, task details, due date/priority, search/filter/sort, status actions and recoverable deletion. Simple Mode hides advanced editor fields while updates preserve their values. Both modes share one database.
+- **PASS:** [CI run 41735248313](https://github.com/petcuiulian/finance-os/actions/runs/41735248313), implementation `974c63d`: locked restore, Release build, formatting and 15/15 tests on Linux and Windows; Windows development/published desktop smoke checks verified task capture and restart persistence. Tests cover migration, task lifecycle, search, due boundaries, foreign keys and Trash status preservation.
+- Diagnosed earlier Windows test fixture failure: a pooled temporary SQLite connection blocked file cleanup. Fixed the fixture and reran the affected checks.
+- **UNVERIFIED — target laptop/manual review:** visual/DPI/accessibility and high-volume performance. Project/category/checklist editors and the advanced master-spec task fields remain planned, not canceled.
+- **Next:** M3 reminder scheduling and calendar reliability, with Windows lifecycle validation. Stop before M3 in this task.
+
 ## 2026-11-04 — M1 complete; M2 next
 - Added the WPF Overview and Settings shell, semantic light/dark themes, custom button/card/navigation styles with focus and disabled states, first-run welcome, English/Romanian shell text and disabled future module links.
 - SQLite schema v2 migrates M0 databases in one transaction and persists theme, language, mode and onboarding state. Simple/Advanced uses the same database; no task schema or M2 feature was started.
