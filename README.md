@@ -1,7 +1,7 @@
 # FINANCE OS
 
-Offline-first Windows 10/11 finance productivity application. M0 introduces a native
-.NET 10/WPF window, local SQLite bootstrap and an in-app notification adapter. Task
+Offline-first Windows 10/11 finance productivity application. M0/M1 provide a native .NET 10/WPF window, local SQLite storage, a working
+Overview and Settings shell, persisted presentation preferences and an in-app notice. Task
 management and all later features remain planned in `docs/ROADMAP.md`; this is not a
 finished finance product. M0 checks passed on Linux and Windows, including development
 and published app launch/restart smoke tests ([CI evidence](https://github.com/petcuiulian/finance-os/actions/runs/41729389594)).
@@ -56,8 +56,12 @@ after dependency changes, then run all checks.
 ## Data and safety
 
 Windows data: `%LOCALAPPDATA%/FinanceOS/finance-os.db`. The database lives outside the
-executable directory. The M0 schema stores a launch counter to exercise migrations
-and restart durability; it contains no task schema yet. "Check local storage" reads
+executable directory. The version 2 schema stores a launch counter and theme, language, mode and
+onboarding preferences. A version 1 database migrates in place. It contains no task
+schema yet. Overview and Settings navigate with keyboard-accessible native buttons. Light/dark
+theme, EN/RO language and Simple/Advanced mode controls save immediately to the
+same SQLite database; the first-run welcome can be dismissed. Future modules are
+shown as disabled navigation items. "Check local storage" reads
 that database without incrementing the counter. "Test in-app notice" changes the
 in-app message and sends no OS toast. Closing the window ends the process.
 

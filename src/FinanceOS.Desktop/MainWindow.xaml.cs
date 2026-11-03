@@ -125,6 +125,8 @@ public partial class MainWindow : Window, INotificationSink
         OverviewPanel.Visibility = _page == "Overview" ? Visibility.Visible : Visibility.Collapsed;
         SettingsPanel.Visibility = _page == "Settings" ? Visibility.Visible : Visibility.Collapsed;
         PageTitle.Text = T(_page, _page == "Overview" ? "Prezentare" : "Setări");
+        OverviewButton.SetResourceReference(Button.BackgroundProperty, _page == "Overview" ? "AccentSubtleBrush" : "SurfaceBrush");
+        SettingsButton.SetResourceReference(Button.BackgroundProperty, _page == "Settings" ? "AccentSubtleBrush" : "SurfaceBrush");
     }
 
     private string T(string english, string romanian) => _preferences.Language == "ro" ? romanian : english;

@@ -6,4 +6,5 @@
  <SolidColorBrush x:Key="AccentBrush" Color="#3158C7" />
  <SolidColorBrush x:Key="OnAccentBrush" Color="#FFFFFF" />
  <SolidColorBrush x:Key="BorderBrush" Color="#D8DFEB" />
+ <SolidColorBrush x:Key="AccentSubtleBrush" Color="#E8EDFA" />
 </ResourceDictionary>
