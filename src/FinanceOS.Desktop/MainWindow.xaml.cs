@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using FinanceOS.Core;
+using FinanceOS.Infrastructure;
 
 namespace FinanceOS.Desktop;
 
@@ -16,13 +17,15 @@ public partial class MainWindow : Window, INotificationSink
     private string _page = "Overview";
     private bool _ready;
     private StorageStatus? _lastStatus;
-    public bool SupportsSystemNotifications => false;
+    public bool SupportsSystemNotifications => OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041);
 
-    public MainWindow(IAppStore store, ITaskStore tasks)
+    public MainWindow(IAppStore store, ITaskStore tasks, SqliteReminderStore reminders)
     {
         InitializeComponent();
         _store = store;
         _tasks = tasks;
+        _reminders = reminders;
+        InitializeReminderLifecycle();
         Closed += (_, _) => _lifetime.Cancel();
         Render();
     }
@@ -34,6 +37,8 @@ public partial class MainWindow : Window, INotificationSink
         try
         {
             _preferences = await _store.ReadPreferencesAsync(_lifetime.Token);
+            _notificationOptions = await _reminders.ReadOptionsAsync();
+            ApplyNotificationOptions();
             _ready = true;
             SetPreferenceButtons(true);
             QuickAddButton.IsEnabled = true;
@@ -41,6 +46,7 @@ public partial class MainWindow : Window, INotificationSink
             ApplyTheme();
             Render();
             await RefreshTasksAsync();
+            await ReconcileRemindersAsync();
         }
         catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
         catch (Exception)
@@ -128,10 +134,14 @@ public partial class MainWindow : Window, INotificationSink
         ClearEditor();
         RenderPage();
         _ = RefreshTasksAsync();
+        if (_page == "Calendar") _ = RefreshCalendarAsync();
+        if (_page == "Reminders") _ = ReconcileRemindersAsync();
     }
 
     private void RenderPage()
     {
+        RemindersPanel.Visibility = _page == "Reminders" ? Visibility.Visible : Visibility.Collapsed;
+        CalendarPanel.Visibility = _page == "Calendar" ? Visibility.Visible : Visibility.Collapsed;
         OverviewPanel.Visibility = _page == "Overview" ? Visibility.Visible : Visibility.Collapsed;
         SettingsPanel.Visibility = _page == "Settings" ? Visibility.Visible : Visibility.Collapsed;
         TaskPanel.Visibility = _page is "Tasks" or "MyDay" or "Archive" or "Trash" ? Visibility.Visible : Visibility.Collapsed;
@@ -160,8 +170,8 @@ public partial class MainWindow : Window, INotificationSink
         TrashButton.Content = T("T_rash", "_Coș");
         DeleteTaskButton.Content = T("Move to _trash…", "Mută în _coș…");
         AdvancedFieldsPanel.Visibility = _preferences.Mode == "Advanced" ? Visibility.Visible : Visibility.Collapsed;
-        CalendarButton.Content = T("Calendar · M3", "Calendar · M3");
-        RemindersButton.Content = T("Reminders · M3", "Mementouri · M3");
+        CalendarButton.Content = T("Calendar", "Calendar");
+        RemindersButton.Content = T("Reminders", "Mementouri");
         WorkflowsButton.Content = T("Workflows · M4", "Fluxuri de lucru · M4");
         ProjectsButton.Content = T("Projects · M4", "Proiecte · M4");
         AnalyticsButton.Content = T("Analytics · M5", "Analiză · M5");
@@ -187,7 +197,7 @@ public partial class MainWindow : Window, INotificationSink
             $"Temă: {_preferences.Theme} · Limbă: {_preferences.Language.ToUpperInvariant()} · Mod: {_preferences.Mode}");
         if (_lastStatus is not null) RenderStatus();
         if (NoticeText.Text.Contains("M3", StringComparison.Ordinal))
-            NoticeText.Text = T("System notifications and scheduling arrive in M3. This app does not run after exit.", "Notificările de sistem și programarea vor fi disponibile în M3. Aplicația nu rulează după închidere.");
+            NoticeText.Text = T("Enable Windows notifications in Reminders. Keep the app open or in the tray; closing it stops live delivery.", "Activează notificările Windows în Mementouri. Aplicația trebuie să rămână deschisă sau în tray.");
         QuickAddButton.Content = T("_Add task", "_Adaugă sarcină");
         EditorHeading.Text = _editing is null ? T("New task", "Sarcină nouă") : T("Edit task", "Editează sarcina");
         if (!_ready) SetPreferenceButtons(false);
@@ -234,6 +244,7 @@ public partial class MainWindow : Window, INotificationSink
         DeleteTaskButton.IsEnabled = !_tasksBusy && task is not null && task.Status != "Deleted";
         if (task is null) return;
         _editing = task;
+        _reminderTask = task;
         TaskTitleBox.Text = task.Title;
         TaskNotesBox.Text = task.Notes;
         TaskDuePicker.SelectedDate = task.DueDate?.ToDateTime(TimeOnly.MinValue);

@@ -84,7 +84,7 @@ public sealed class TaskTests : IDisposable
             cmd.ExecuteNonQuery();
         }
         var app = new SqliteAppStore(Database);
-        Assert.Equal(new StorageStatus(4, 5), await app.OpenSessionAsync());
+        Assert.Equal(new StorageStatus(5, 5), await app.OpenSessionAsync());
         Assert.Equal(new WorkspacePreferences("Dark", "ro", "Advanced", true), await app.ReadPreferencesAsync());
         Assert.Empty(await Tasks.ListAsync(new TaskQuery("Tasks")));
     }
@@ -109,7 +109,7 @@ public sealed class TaskTests : IDisposable
                 """;
             cmd.ExecuteNonQuery();
         }
-        Assert.Equal(new StorageStatus(4, 3), await new SqliteAppStore(Database).OpenSessionAsync());
+        Assert.Equal(new StorageStatus(5, 3), await new SqliteAppStore(Database).OpenSessionAsync());
         Assert.Equal("Existing task", Assert.Single(await Tasks.ListAsync(new TaskQuery("Tasks"))).Title);
     }
 

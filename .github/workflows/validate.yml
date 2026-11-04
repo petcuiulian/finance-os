@@ -24,7 +24,7 @@ jobs:
       - name: Development desktop smoke
         if: runner.os == 'Windows'
         shell: pwsh
-        run: ./scripts/smoke-windows.ps1 -ExecutablePath ./src/FinanceOS.Desktop/bin/Release/net10.0-windows/FinanceOS.exe
+        run: ./scripts/smoke-windows.ps1 -ExecutablePath ./src/FinanceOS.Desktop/bin/Release/net10.0-windows10.0.19041.0/FinanceOS.exe
       - name: Publish Windows folder
         if: runner.os == 'Windows'
         shell: pwsh
@@ -33,6 +33,14 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: ./scripts/smoke-windows.ps1
+      - name: Windows toast API smoke
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $process = Start-Process ./artifacts/win-x64/FinanceOS.exe -ArgumentList '--toast-smoke' -PassThru
+          if (!$process.WaitForExit(30000)) { $process.Kill(); throw 'Toast smoke timed out.' }
+          Get-Content "$env:TEMP/finance-toast-smoke.txt"
+          if ($process.ExitCode -ne 0) { throw "Toast smoke failed: $($process.ExitCode)" }
       - uses: actions/upload-artifact@v4
         if: runner.os == 'Windows'
         with:

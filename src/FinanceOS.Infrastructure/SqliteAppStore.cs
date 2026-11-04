@@ -5,7 +5,7 @@ namespace FinanceOS.Infrastructure;
 
 public sealed class SqliteAppStore : IAppStore
 {
-    public const int CurrentSchemaVersion = 4;
+    public const int CurrentSchemaVersion = 5;
     private readonly string _path;
 
     public SqliteAppStore(string path)
@@ -95,6 +95,35 @@ public sealed class SqliteAppStore : IAppStore
                 ALTER TABLE tasks ADD COLUMN deleted_utc TEXT;
                 CREATE INDEX ix_tasks_deleted ON tasks(deleted_utc);
                 PRAGMA user_version = 4;
+                """);
+        }
+        if (version <= 4)
+        {
+            Execute(connection, transaction, """
+                CREATE TABLE notification_options (id INTEGER PRIMARY KEY CHECK(id=1), toasts INTEGER NOT NULL,
+                    sound INTEGER NOT NULL, working_hours INTEGER NOT NULL, weekdays INTEGER NOT NULL);
+                INSERT INTO notification_options VALUES(1,0,0,0,0);
+                CREATE TABLE reminders (
+                    id TEXT PRIMARY KEY, task_id TEXT NOT NULL REFERENCES tasks(id),
+                    due_utc INTEGER NOT NULL, anchor_local TEXT NOT NULL, timezone TEXT NOT NULL,
+                    recurrence TEXT NOT NULL CHECK(recurrence IN ('Once','Daily','Weekly','Monthly','Interval')),
+                    interval_minutes INTEGER NOT NULL CHECK(interval_minutes BETWEEN 1 AND 525600),
+                    enabled INTEGER NOT NULL DEFAULT 1 CHECK(enabled IN (0,1))
+                );
+                CREATE INDEX ix_reminders_due ON reminders(enabled,due_utc);
+                CREATE TABLE reminder_alerts (
+                    id TEXT PRIMARY KEY, reminder_id TEXT NOT NULL REFERENCES reminders(id),
+                    scheduled_utc INTEGER NOT NULL, available_utc INTEGER NOT NULL,
+                    dismissed INTEGER NOT NULL DEFAULT 0, toast_attempted INTEGER NOT NULL DEFAULT 0,
+                    UNIQUE(reminder_id,scheduled_utc)
+                );
+                CREATE INDEX ix_alerts_available ON reminder_alerts(dismissed,available_utc);
+                CREATE TABLE time_blocks (
+                    id TEXT PRIMARY KEY, title TEXT NOT NULL CHECK(length(trim(title)) BETWEEN 1 AND 300),
+                    start_utc INTEGER NOT NULL, end_utc INTEGER NOT NULL CHECK(end_utc>start_utc), timezone TEXT NOT NULL
+                );
+                CREATE INDEX ix_time_blocks_start ON time_blocks(start_utc,end_utc);
+                PRAGMA user_version = 5;
                 """);
         }
         cancellationToken.ThrowIfCancellationRequested();

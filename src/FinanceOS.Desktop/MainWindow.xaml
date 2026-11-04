@@ -15,8 +15,8 @@
      <Button x:Name="TasksButton" Content="_Tasks" Tag="Tasks" Click="OnNavigate" Style="{StaticResource NavButton}" />
      <Button x:Name="ArchiveButton" Content="_Archive" Tag="Archive" Click="OnNavigate" Style="{StaticResource NavButton}" />
      <Button x:Name="TrashButton" Content="T_rash" Tag="Trash" Click="OnNavigate" Style="{StaticResource NavButton}" />
-     <Button x:Name="CalendarButton" Content="Calendar · M3" IsEnabled="False" Style="{StaticResource NavButton}" />
-     <Button x:Name="RemindersButton" Content="Reminders · M3" IsEnabled="False" Style="{StaticResource NavButton}" />
+     <Button x:Name="CalendarButton" Content="Calendar" Tag="Calendar" Click="OnNavigate" Style="{StaticResource NavButton}" />
+     <Button x:Name="RemindersButton" Content="Reminders" Tag="Reminders" Click="OnNavigate" Style="{StaticResource NavButton}" />
      <Button x:Name="WorkflowsButton" Content="Workflows · M4" IsEnabled="False" Style="{StaticResource NavButton}" />
      <Button x:Name="ProjectsButton" Content="Projects · M4" IsEnabled="False" Style="{StaticResource NavButton}" />
      <Button x:Name="AnalyticsButton" Content="Analytics · M5" IsEnabled="False" Style="{StaticResource NavButton}" />
@@ -108,6 +108,81 @@
        </WrapPanel>
       </StackPanel></Border>
       <TextBlock x:Name="TaskErrorText" Style="{StaticResource MutedText}" Margin="0,12,0,0" AutomationProperties.LiveSetting="Polite" />
+     </StackPanel>
+     <StackPanel x:Name="RemindersPanel" Visibility="Collapsed">
+      <TextBlock Text="Reminders / Mementouri" FontSize="28" FontWeight="SemiBold" />
+      <TextBlock Text="Missed reminders remain here. Keep the app open or in the tray for live alerts. Closing it stops delivery until the next launch." Style="{StaticResource MutedText}" Margin="0,8,0,14" />
+      <WrapPanel x:Name="NotificationOptionsPanel">
+       <CheckBox x:Name="EnableToastsBox" Checked="OnNotificationOptionsChanged" Unchecked="OnNotificationOptionsChanged" Content="Windows notifications" Margin="0,0,16,12" />
+       <CheckBox x:Name="EnableSoundBox" Checked="OnNotificationOptionsChanged" Unchecked="OnNotificationOptionsChanged" Content="Sound" Margin="0,0,16,12" />
+       <CheckBox x:Name="WorkingHoursOnlyBox" Checked="OnNotificationOptionsChanged" Unchecked="OnNotificationOptionsChanged" Content="Toasts 09:00–17:00 only" Margin="0,0,16,12" />
+       <CheckBox x:Name="WeekdaysOnlyBox" Checked="OnNotificationOptionsChanged" Unchecked="OnNotificationOptionsChanged" Content="Weekday toasts only" Margin="0,0,16,12" />
+       <Button Content="Minimize to tray" Click="OnMinimizeToTray" Margin="0,0,0,12" />
+      </WrapPanel>
+      <DataGrid x:Name="ReminderGrid" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" MinHeight="160" MaxHeight="280">
+       <DataGrid.Columns>
+        <DataGridTextColumn Header="Task" Binding="{Binding Title}" Width="2*" />
+        <DataGridTextColumn Header="Scheduled (UTC)" Binding="{Binding ScheduledUtc}" Width="*" />
+       </DataGrid.Columns>
+      </DataGrid>
+      <WrapPanel Margin="0,10,0,20">
+       <Button x:Name="DismissReminderButton" Content="Dismiss" Click="OnDismissReminder" Margin="0,0,8,8" />
+       <ComboBox x:Name="SnoozeMinutesBox" Width="95" SelectedIndex="0" Margin="0,0,8,8">
+        <ComboBoxItem Content="5"/><ComboBoxItem Content="10"/><ComboBoxItem Content="15"/><ComboBoxItem Content="30"/><ComboBoxItem Content="60"/><ComboBoxItem Content="Tomorrow"/><ComboBoxItem Content="Custom"/>
+       </ComboBox>
+       <Button x:Name="SnoozeReminderButton" Content="Snooze" Click="OnSnoozeReminder" Margin="0,0,8,8" />
+       <Button Content="Open task" Click="OnOpenReminderTask" Margin="0,0,8,8" />
+      </WrapPanel>
+      <Border Style="{StaticResource Card}"><StackPanel>
+       <TextBlock Text="Add a reminder for the selected task" Style="{StaticResource SectionTitle}" />
+       <TextBlock Text="Select a task in Tasks first. Custom snooze also uses the date and time below." Style="{StaticResource MutedText}" Margin="0,8,0,12" />
+       <WrapPanel>
+        <DatePicker x:Name="ReminderDatePicker" Width="145" Margin="0,0,8,8" />
+        <TextBox x:Name="ReminderTimeBox" Text="09:00" Width="75" Margin="0,0,8,8" AutomationProperties.Name="Reminder time HH:mm" />
+        <ComboBox x:Name="RecurrenceBox" SelectedIndex="0" Width="110" Margin="0,0,8,8">
+         <ComboBoxItem Content="Once"/><ComboBoxItem Content="Daily"/><ComboBoxItem Content="Weekly"/><ComboBoxItem Content="Monthly"/><ComboBoxItem Content="Interval"/>
+        </ComboBox>
+        <TextBox x:Name="IntervalMinutesBox" Text="60" Width="65" Margin="0,0,8,8" ToolTip="Custom interval in minutes" />
+       </WrapPanel>
+       <TextBlock x:Name="ReminderZoneText" Style="{StaticResource MutedText}" />
+       <Button x:Name="AddReminderButton" Content="Save reminder" Click="OnAddReminder" HorizontalAlignment="Left" Margin="0,12,0,0" />
+      </StackPanel></Border>
+      <TextBlock Text="Scheduled reminders" Style="{StaticResource SectionTitle}" Margin="0,20,0,8" />
+      <DataGrid x:Name="ScheduledReminderGrid" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" MaxHeight="170">
+       <DataGrid.Columns>
+        <DataGridTextColumn Header="Task" Binding="{Binding Title}" Width="2*"/>
+        <DataGridTextColumn Header="Next (UTC)" Binding="{Binding DueUtc}" Width="*"/>
+        <DataGridTextColumn Header="Repeat" Binding="{Binding Recurrence}" Width="*"/>
+       </DataGrid.Columns>
+      </DataGrid>
+      <Button Content="Cancel selected schedule" Click="OnCancelSchedule" HorizontalAlignment="Left" Margin="0,8,0,0" />
+      <TextBlock x:Name="ReminderStatusText" AutomationProperties.LiveSetting="Polite" Margin="0,12,0,0" />
+     </StackPanel>
+     <StackPanel x:Name="CalendarPanel" Visibility="Collapsed">
+      <TextBlock Text="Calendar / Calendar" FontSize="28" FontWeight="SemiBold" />
+      <WrapPanel Margin="0,14,0,14">
+       <DatePicker x:Name="CalendarDatePicker" Width="145" SelectedDateChanged="OnCalendarChanged" Margin="0,0,8,8" />
+       <ComboBox x:Name="CalendarViewBox" Width="120" SelectedIndex="0" SelectionChanged="OnCalendarViewChanged" Margin="0,0,8,8">
+        <ComboBoxItem Content="Day"/><ComboBoxItem Content="Week"/><ComboBoxItem Content="Month"/><ComboBoxItem Content="Agenda"/>
+       </ComboBox>
+      </WrapPanel>
+      <DataGrid x:Name="CalendarGrid" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" MinHeight="220" MaxHeight="350">
+       <DataGrid.Columns>
+        <DataGridTextColumn Header="Title" Binding="{Binding Title}" Width="2*"/>
+        <DataGridTextColumn Header="Type" Binding="{Binding Kind}" Width="*"/>
+        <DataGridTextColumn Header="Start (local)" Binding="{Binding Start}" Width="*"/>
+        <DataGridTextColumn Header="End" Binding="{Binding End}" Width="*"/>
+       </DataGrid.Columns>
+      </DataGrid>
+      <TextBlock Text="Time block for selected date" Style="{StaticResource SectionTitle}" Margin="0,18,0,10" />
+      <TextBox x:Name="BlockTitleBox" AutomationProperties.Name="Time block title" MaxLength="300" Margin="0,0,0,8" />
+      <WrapPanel>
+       <TextBox x:Name="BlockStartBox" Text="09:00" Width="75" Margin="0,0,8,8" AutomationProperties.Name="Block start" />
+       <TextBox x:Name="BlockEndBox" Text="10:00" Width="75" Margin="0,0,8,8" AutomationProperties.Name="Block end" />
+       <Button x:Name="AddBlockButton" Content="Add time block" Click="OnAddBlock" Margin="0,0,8,8" />
+       <Button Content="Remove selected block" Click="OnRemoveBlock" Margin="0,0,8,8" />
+      </WrapPanel>
+      <TextBlock x:Name="CalendarStatusText" AutomationProperties.LiveSetting="Polite" />
      </StackPanel>
      <StackPanel x:Name="SettingsPanel" Visibility="Collapsed">
       <TextBlock x:Name="SettingsHeading" Text="Make the workspace yours." FontSize="30" FontWeight="SemiBold" />

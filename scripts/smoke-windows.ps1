@@ -6,7 +6,7 @@ $exe = (Resolve-Path $ExecutablePath).Path
 function Read-LaunchCount($window) {
     $elements = $window.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
     foreach ($element in $elements) {
-        if ($element.Current.Name -match '(?:Local SQLite ready · schema|SQLite local pregătit · schema) 4 · (?:workspace launches|porniri) (\d+)$') { return [long]$Matches[1] }
+        if ($element.Current.Name -match '(?:Local SQLite ready · schema|SQLite local pregătit · schema) 5 · (?:workspace launches|porniri) (\d+)$') { return [long]$Matches[1] }
     }
     return $null
 }
@@ -25,7 +25,7 @@ function Invoke-ById($window, $id) {
     $pattern = $button.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
     $pattern.Invoke()
 }
-function Run-Smoke([bool]$changePreferences) {
+function Run-Smoke([bool]$changePreferences, [bool]$forceCrash = $false) {
     $process = Start-Process $exe -PassThru
     try {
         $deadline = (Get-Date).AddSeconds(30)
@@ -83,16 +83,63 @@ function Run-Smoke([bool]$changePreferences) {
             Start-Sleep -Milliseconds 100
         } while ((Get-Date) -lt $deadline)
         if (!$found) { throw 'Task was not visible after creation or restart.' }
+        if ($changePreferences) {
+            $selected = $false
+            foreach ($row in $rows) {
+                if ($row.Current.Name -like '*M2 smoke task*') {
+                    $pattern = $null
+                    if ($row.TryGetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern, [ref]$pattern)) {
+                        $pattern.Select(); $selected = $true; break
+                    }
+                }
+            }
+            if (!$selected) { throw 'Task row could not be selected for reminder.' }
+        }
+        Invoke-ById $window 'RemindersButton'
+        if ($changePreferences) {
+            $time = (Find-ById $window 'ReminderTimeBox').GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern)
+            $time.SetValue('00:00')
+            Invoke-ById $window 'AddReminderButton'
+        }
+        $deadline = (Get-Date).AddSeconds(10)
+        do {
+            $grid = Find-ById $window 'ReminderGrid'
+            $elements = $grid.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
+            $recovered = $false
+            foreach ($element in $elements) { if ($element.Current.Name -like '*M2 smoke task*') { $recovered = $true; break } }
+            if ($recovered) { break }
+            Start-Sleep -Milliseconds 100
+        } while ((Get-Date) -lt $deadline)
+        if (!$recovered) { throw 'Reminder was not recovered in the inbox.' }
+        Invoke-ById $window 'CalendarButton'
+        if ($changePreferences) {
+            $block = (Find-ById $window 'BlockTitleBox').GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern)
+            $block.SetValue('M3 smoke block')
+            Invoke-ById $window 'AddBlockButton'
+        }
+        $deadline = (Get-Date).AddSeconds(5)
+        do {
+            $grid = Find-ById $window 'CalendarGrid'
+            $elements = $grid.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
+            $blockFound = $false
+            foreach ($element in $elements) { if ($element.Current.Name -like '*M3 smoke block*') { $blockFound = $true; break } }
+            if ($blockFound) { break }
+            Start-Sleep -Milliseconds 100
+        } while ((Get-Date) -lt $deadline)
+        if (!$blockFound) { throw 'Calendar block was not visible after creation or restart.' }
         return $count
     } finally {
         if (!$process.HasExited) {
-            $null = $process.CloseMainWindow()
-            if (!$process.WaitForExit(5000)) { $process.Kill(); throw 'App did not close cleanly.' }
+            if ($forceCrash) { $process.Kill(); $process.WaitForExit() }
+            else {
+                $null = $process.CloseMainWindow()
+                if (!$process.WaitForExit(5000)) { $process.Kill(); throw 'App did not close cleanly.' }
+            }
         }
         $process.Dispose()
     }
 }
-$first = Run-Smoke $true
+$first = Run-Smoke $true $true
 $second = Run-Smoke $false
 if ($second -ne ($first + 1)) { throw 'Session did not persist across desktop restart.' }
-Write-Output 'PASS: Windows launch, storage, notice, navigation, preferences, task capture, close and restart persistence.'
+Write-Output 'PASS: Windows launch, storage, notice, navigation, preferences, task capture, reminder recovery, calendar block, forced process termination and restart persistence.'
