@@ -51,10 +51,10 @@ See [M3 validation](M3_VALIDATION.md) for recovery semantics, target-device step
 **Gate:** Advanced mode has a dedicated Productivity page; Simple mode hides it and uses the same data. [CI run 41809199980](https://github.com/petcuiulian/finance-os/actions/runs/41809199980) passed Linux/Windows builds, 34 tests, formatting, development/published desktop smoke including the Productivity page and native toast API smoke. Physical M5 usability review remains unverified. Further master-spec extensions (additional automation actions, calendar-aware per-task effort planning, search of non-task entities, multiple named templates and richer analytics) remain in scope.
 
 ## M6 — Hardening and Windows release
-- [x] Automated regression and 10k-task import/search/full-backup/restore integrity tests. Windows package/UI CI evidence recorded in WORK_LOG.
+- [x] Automated regression and 10k-task import/search/full-backup/restore integrity tests. [Windows/Linux CI 41836745221](https://github.com/petcuiulian/finance-os/actions/runs/41836745221) passed 38 tests, builds, formatting, all three Windows desktop smoke variants and toast API smoke.
 - [-] Focused code/dependency review, online full backup, validated offline restore with retained safety copy, pre-migration snapshot, corruption checks and redacted diagnostics implemented. Independent security review remains open.
 - [-] Linux 10k benchmark recorded; Windows smoke prints launch-to-ready and memory observations. Target-device cold/idle profiling and manual accessibility remain open.
-- [-] Self-contained portable ZIP with SHA-256 manifest and extracted-package smoke added. A clean Windows machine without developer tools remains required.
+- [-] Self-contained portable ZIP with SHA-256 manifest and extracted-package smoke passed Windows CI. A clean Windows machine without developer tools remains required.
 - [x] Documented deployment, IT approval, signing/allowlisting, dependencies, backup/recovery, troubleshooting and release limitations in WINDOWS_RELEASE.md.
 **Gate: OPEN.** Physical lifecycle/accessibility/performance, clean-machine acceptance, signing and retained functional carryovers must be resolved before claiming the complete production product.
 

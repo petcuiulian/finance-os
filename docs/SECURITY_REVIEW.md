@@ -9,4 +9,6 @@ Reviewed local persistence, task exchange, automation, recovery and startup path
 - Diagnostics contain versions and integrity status only. No remote diagnostics, telemetry, secret collection or network integration is enabled.
 - Automated tests cover corrupt/future backup rejection, unchanged original data on failure, rollback, restore safety copies and a 10k-task dataset.
 
+Dependency audit on 2026-11-04 (`dotnet list FinanceOS.slnx package --vulnerable --include-transitive`) reported no known vulnerable packages from nuget.org. This is a point-in-time advisory check, not proof of absence of vulnerabilities. Windows/Linux CI 41836745221 passed the 38-test suite and portable package smoke.
+
 Remaining release work: independent security review, signed distribution, clean-machine acceptance, manual accessibility and lifecycle tests, configured data-retention UX, and an explicit encryption/key-recovery design if required by IT. Backups are sensitive, unencrypted workspace files. Do not delete migration/restore copies automatically until retention and recovery policy is approved.
