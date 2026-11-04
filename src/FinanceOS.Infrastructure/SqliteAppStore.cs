@@ -5,7 +5,7 @@ namespace FinanceOS.Infrastructure;
 
 public sealed class SqliteAppStore : IAppStore
 {
-    public const int CurrentSchemaVersion = 6;
+    public const int CurrentSchemaVersion = 7;
     private readonly string _path;
 
     public SqliteAppStore(string path)
@@ -171,6 +171,25 @@ public sealed class SqliteAppStore : IAppStore
                     ('rc-monthly','controls','Monthly reconciliation',2),('rc-quarterly','controls','Quarterly reporting',3),
                     ('rc-yearly','controls','Year-end procedures',4);
                 PRAGMA user_version = 6;
+                """);
+        }
+        if (version <= 6)
+        {
+            Execute(connection, transaction, """
+                CREATE TABLE productivity_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+                CREATE TABLE time_entries (id TEXT PRIMARY KEY, task_id TEXT NOT NULL REFERENCES tasks(id),
+                    start_utc INTEGER NOT NULL, end_utc INTEGER CHECK(end_utc>=start_utc));
+                CREATE UNIQUE INDEX ix_single_timer ON time_entries((1)) WHERE end_utc IS NULL;
+                CREATE TABLE automation_rules (id TEXT PRIMARY KEY, name TEXT NOT NULL, trigger TEXT NOT NULL,
+                    contains_text TEXT NOT NULL, priority TEXT NOT NULL, enabled INTEGER NOT NULL DEFAULT 1);
+                CREATE TABLE automation_history (id TEXT PRIMARY KEY, rule_id TEXT NOT NULL REFERENCES automation_rules(id),
+                    task_id TEXT NOT NULL REFERENCES tasks(id), occurrence TEXT NOT NULL, before_priority TEXT NOT NULL,
+                    after_priority TEXT NOT NULL, undone INTEGER NOT NULL DEFAULT 0, UNIQUE(rule_id,task_id,occurrence));
+                CREATE TABLE completion_events (id INTEGER PRIMARY KEY, task_id TEXT NOT NULL REFERENCES tasks(id), at_utc TEXT NOT NULL);
+                CREATE TRIGGER track_completion AFTER UPDATE OF status ON tasks
+                    WHEN NEW.status='Done' AND OLD.status!='Done'
+                    BEGIN INSERT INTO completion_events(task_id,at_utc) VALUES(NEW.id,strftime('%Y-%m-%dT%H:%M:%SZ','now')); END;
+                PRAGMA user_version=7;
                 """);
         }
         cancellationToken.ThrowIfCancellationRequested();

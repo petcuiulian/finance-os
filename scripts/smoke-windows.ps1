@@ -6,7 +6,7 @@ $exe = (Resolve-Path $ExecutablePath).Path
 function Read-LaunchCount($window) {
     $elements = $window.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
     foreach ($element in $elements) {
-        if ($element.Current.Name -match '(?:Local SQLite ready · schema|SQLite local pregătit · schema) 6 · (?:workspace launches|porniri) (\d+)$') { return [long]$Matches[1] }
+        if ($element.Current.Name -match '(?:Local SQLite ready · schema|SQLite local pregătit · schema) 7 · (?:workspace launches|porniri) (\d+)$') { return [long]$Matches[1] }
     }
     return $null
 }
@@ -115,6 +115,15 @@ function Run-Smoke([bool]$changePreferences, [bool]$forceCrash = $false) {
             Start-Sleep -Milliseconds 100
         } while ((Get-Date) -lt $deadline)
         if (!$cardFound) { throw 'Workflow card was not visible after assignment or restart.' }
+        Invoke-ById $window 'AnalyticsButton'
+        Invoke-ById $window 'RefreshProductivityButton'
+        $deadline = (Get-Date).AddSeconds(5)
+        do {
+            $metrics = Find-ById $window 'MetricsText'
+            if ($null -ne $metrics -and $metrics.Current.Name -like 'Filtered workload:*') { break }
+            Start-Sleep -Milliseconds 100
+        } while ((Get-Date) -lt $deadline)
+        if ($null -eq $metrics -or $metrics.Current.Name -notlike 'Filtered workload:*') { throw 'Productivity dashboard did not load.' }
         Invoke-ById $window 'WaitingButton'
         if ($null -eq (Find-ById $window 'WaitingGrid')) { throw 'Waiting view was not visible.' }
         Invoke-ById $window 'RemindersButton'

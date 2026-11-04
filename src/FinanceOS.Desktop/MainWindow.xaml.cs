@@ -19,13 +19,15 @@ public partial class MainWindow : Window, INotificationSink
     private StorageStatus? _lastStatus;
     public bool SupportsSystemNotifications => OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041);
 
-    public MainWindow(IAppStore store, ITaskStore tasks, SqliteReminderStore reminders, SqliteWorkflowStore workflows)
+    public MainWindow(IAppStore store, ITaskStore tasks, SqliteReminderStore reminders, SqliteWorkflowStore workflows, SqliteProductivityStore productivity)
     {
         InitializeComponent();
         _store = store;
         _tasks = tasks;
         _reminders = reminders;
         _workflows = workflows;
+        _productivity = productivity;
+        InitializeProductivity();
         InitializeReminderLifecycle();
         InitializeWorkflowLifecycle();
         Closed += (_, _) => _lifetime.Cancel();
@@ -138,6 +140,7 @@ public partial class MainWindow : Window, INotificationSink
         ClearEditor();
         RenderPage();
         _ = RefreshTasksAsync();
+        if (_page == "Productivity") _ = RefreshProductivityAsync();
         if (_page == "Calendar") _ = RefreshCalendarAsync();
         if (_page == "Reminders") _ = ReconcileRemindersAsync();
         if (_page is "Workflows" or "Waiting") _ = RefreshWorkflowsAsync();
@@ -145,6 +148,9 @@ public partial class MainWindow : Window, INotificationSink
 
     private void RenderPage()
     {
+        AnalyticsButton.Visibility = _preferences.Mode == "Advanced" ? Visibility.Visible : Visibility.Collapsed;
+        if (_page == "Productivity" && _preferences.Mode != "Advanced") _page = "Overview";
+        ProductivityPanel.Visibility = _page == "Productivity" ? Visibility.Visible : Visibility.Collapsed;
         RemindersPanel.Visibility = _page == "Reminders" ? Visibility.Visible : Visibility.Collapsed;
         CalendarPanel.Visibility = _page == "Calendar" ? Visibility.Visible : Visibility.Collapsed;
         OverviewPanel.Visibility = _page == "Overview" ? Visibility.Visible : Visibility.Collapsed;

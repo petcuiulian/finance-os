@@ -11,7 +11,7 @@ public partial class App : Application
     {
         base.OnStartup(e);
         var path = AppDataPaths.DatabasePath(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
-        MainWindow = new MainWindow(new SqliteAppStore(path), new SqliteTaskStore(path), new SqliteReminderStore(path), new SqliteWorkflowStore(path));
+        MainWindow = new MainWindow(new SqliteAppStore(path), new SqliteTaskStore(path), new SqliteReminderStore(path), new SqliteWorkflowStore(path), new SqliteProductivityStore(path));
         try
         {
             ToastNotificationManagerCompat.OnActivated += _ => Dispatcher.Invoke(() =>

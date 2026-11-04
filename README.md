@@ -1,6 +1,6 @@
 # FINANCE OS
 
-Offline-first Windows 10 (build 19041+)/11 finance productivity application. M0–M4 provide a native .NET 10/WPF shell, persistent preferences, local task manager, reminders, calendar and finance workflows. Quick Add, My Day, search, editing, completion, Archive and recoverable Trash work without login or network access. This is not the finished release product.
+Offline-first Windows 10 (build 19041+)/11 finance productivity application. M0–M5 provide a native .NET 10/WPF shell, persistent preferences, local task manager, reminders, calendar and finance workflows. Quick Add, My Day, search, editing, completion, Archive and recoverable Trash work without login or network access. This is not the finished release product.
 
 ## Develop
 
@@ -51,7 +51,7 @@ after dependency changes, then run all checks.
 
 ## Data and safety
 
-Windows data: `%LOCALAPPDATA%/FinanceOS/finance-os.db`. The database lives outside the executable directory. Schema v6 migrates previous versions in place. It stores preferences, tasks, projects, categories, references, checklist items, workflow data and a recoverable Trash marker. Project/category editors and further master-spec task fields remain later work.
+Windows data: `%LOCALAPPDATA%/FinanceOS/finance-os.db`. The database lives outside the executable directory. Schema v7 migrates previous versions in place. It stores preferences, tasks, projects, categories, references, checklist items, workflow data and a recoverable Trash marker. Project/category editors and further master-spec task fields remain later work.
 
 Use **Ctrl+N** to focus Quick Add, type a title and press Enter. Tasks and My Day show open work; choose a row to edit details or change its state. Simple mode keeps advanced details hidden while preserving them. Advanced mode exposes notes, date and priority. Archive and Trash have dedicated views; Restore returns a trashed task to its previous status. Move to Trash never erases the row. The app stores due *dates* as local calendar dates; reminder instants and original time zones are stored separately.
 
@@ -89,3 +89,6 @@ Windows CI checks are configured in `.github/workflows/validate.yml`. Configurat
 is not evidence of a successful run. Windows launch/rendering, accessibility, DPI,
 notifications and clean-machine packaging must be reported separately from a Linux
 cross-build. See the work log for checks actually executed.
+
+## Advanced productivity
+Switch to Advanced mode and open Productivity for local metrics and daily completion trends, a persistent manual timer, saved search filters, bulk urgency changes and a reusable task template. Planner suggestions use entered remaining capacity and a common per-task estimate; deadlines stay unchanged. The visual automation builder supports overdue/tomorrow triggers, text conditions and priority changes with history/undo. Enabled rules run every minute while the app runs or through Run rules now. JSON/CSV exchange handles task fields only and skips existing IDs; it is not a database backup. Project/category links, reminders and workflows are not imported. No external integration is enabled. Detailed scope and outstanding extensions are recorded in ROADMAP.

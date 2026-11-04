@@ -44,11 +44,11 @@ See [M3 validation](M3_VALIDATION.md) for recovery semantics, target-device step
 **Gate: automated acceptance passed; physical UX review pending.** A 100-task synthetic accountant case covers 60 AP requests, 40 closing items, 20 waiting approvals and 10 dependencies. [CI run 41807602883](https://github.com/petcuiulian/finance-os/actions/runs/41807602883) passed Linux/Windows builds, 29 tests, Windows development/published UI smoke with Kanban restart persistence and toast API smoke. Target-laptop high-volume UX remains unverified.
 
 ## M5 — Advanced productivity
-- [ ] WHEN/IF/THEN rule engine with loop/conflict/idempotency safeguards and traceability.
-- [ ] Time tracking, analytics (private local), planner suggestions, workload forecasts and customizable dashboard.
-- [ ] Advanced views, bulk actions, saved filters, templates, global search and optional mini-tools.
-- [ ] Optional adapter interfaces and offline CSV/JSON import/export; external integrations only when approved and configured.
-**Gate:** Advanced mode adds real capabilities without making Simple Mode cluttered or requiring cloud.
+- [x] Visual WHEN/IF/THEN builder: overdue/tomorrow conditions, text filter, priority action, deterministic conflict handling, durable idempotency and guarded undo.
+- [x] Persistent manual timer, private workload metrics and daily completion trend, capacity-based planner suggestions and saved dashboard widget visibility.
+- [x] Advanced task workspace, atomic bulk priority updates, saved text filters, reusable task template and search across active/archived task titles and notes.
+- [x] Adapter interface and offline CSV/JSON task exchange with atomic validation and duplicate-ID protection. External integrations remain disabled.
+**Gate:** Advanced mode has a dedicated Productivity page; Simple mode hides it and uses the same data. Linux checks pass; Windows CI evidence pending. Further master-spec extensions (additional automation actions, calendar-aware per-task effort planning, search of non-task entities, multiple named templates and richer analytics) remain in scope.
 
 ## M6 — Hardening and Windows release
 - [ ] Automated domain/integration/UI regression; realistic 1k+/10k task datasets where practical.
@@ -59,7 +59,7 @@ See [M3 validation](M3_VALIDATION.md) for recovery semantics, target-device step
 **Gate:** independently verified desktop product; not just a working dev server.
 
 ## Current next task
-**M5 — advanced productivity implementation, when requested.** The user explicitly requested M4 despite the earlier M3 sequencing note. M4 automated acceptance passed; M3 physical lifecycle and M4 physical high-volume UX remain open target-device checks. Keep all original features in scope.
+**M5 — verify Windows acceptance, then M6 hardening when requested.** The user explicitly requested M4 despite the earlier M3 sequencing note. M4 automated acceptance passed; M3 physical lifecycle and M4 physical high-volume UX remain open target-device checks. Keep all original features in scope.
 
 ## Scope management
 - No feature is canceled because it is in a later milestone.

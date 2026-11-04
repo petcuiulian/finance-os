@@ -20,7 +20,7 @@
      <Button x:Name="WorkflowsButton" Content="Workflows" Tag="Workflows" Click="OnNavigate" Style="{StaticResource NavButton}" />
      <Button x:Name="WaitingButton" Content="Waiting" Tag="Waiting" Click="OnNavigate" Style="{StaticResource NavButton}" />
      <Button x:Name="ProjectsButton" Content="Projects · M4" IsEnabled="False" Style="{StaticResource NavButton}" />
-     <Button x:Name="AnalyticsButton" Content="Analytics · M5" IsEnabled="False" Style="{StaticResource NavButton}" />
+     <Button x:Name="AnalyticsButton" Content="Productivity" Tag="Productivity" Click="OnNavigate" Style="{StaticResource NavButton}" />
     </StackPanel>
    </DockPanel>
   </Border>
@@ -61,6 +61,54 @@
        </WrapPanel>
        <TextBlock x:Name="NoticeText" Text="System notifications and scheduling arrive in M3. This app does not run after exit." Style="{StaticResource MutedText}" AutomationProperties.LiveSetting="Polite" />
       </StackPanel></Border>
+     </StackPanel>
+     <StackPanel x:Name="ProductivityPanel" Visibility="Collapsed">
+      <TextBlock Text="Your working day" FontSize="30" FontWeight="SemiBold" />
+      <TextBlock Text="Private analytics, suggested planning and local automation." Style="{StaticResource MutedText}" />
+      <WrapPanel Margin="0,12,0,12">
+       <CheckBox x:Name="ShowMetricsBox" Content="Metrics" IsChecked="True" Margin="0,0,15,0" />
+       <CheckBox x:Name="ShowPlannerBox" Content="Planner" IsChecked="True" Margin="0,0,15,0" />
+       <Button Content="Save dashboard" Click="OnSaveDashboard" />
+       <Button x:Name="RefreshProductivityButton" Content="Refresh" Click="OnRefreshProductivity" />
+      </WrapPanel>
+      <TextBlock x:Name="MetricsText" TextWrapping="Wrap" Margin="0,0,0,15" />
+      <StackPanel x:Name="CompletionChart" Margin="0,0,0,12" />
+      <WrapPanel>
+       <TextBox x:Name="GlobalSearchBox" Width="220" AutomationProperties.Name="Search task titles and notes" />
+       <Button Content="Search" Click="OnRefreshProductivity" />
+       <Button Content="Save filter" Click="OnSaveFilter" />
+       <ComboBox x:Name="SavedFilterBox" Width="170" SelectionChanged="OnSavedFilter" />
+      </WrapPanel>
+      <DataGrid x:Name="ProductivityTasksGrid" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Extended" Height="180" Margin="0,10,0,10">
+       <DataGrid.Columns><DataGridTextColumn Header="Task" Binding="{Binding Title}" Width="*" /><DataGridTextColumn Header="Due" Binding="{Binding DueDate}" Width="110" /><DataGridTextColumn Header="Priority" Binding="{Binding Priority}" Width="90" /><DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90" /></DataGrid.Columns>
+      </DataGrid>
+      <WrapPanel>
+       <Button Content="Set selected urgent" Click="OnBulkUrgent" />
+       <Button Content="Start timer" Click="OnStartTimer" />
+       <Button Content="Stop timer" Click="OnStopTimer" />
+       <Button Content="Save task template" Click="OnSaveTaskTemplate" />
+       <Button Content="Create from template" Click="OnCreateFromTemplate" />
+      </WrapPanel>
+      <TextBlock x:Name="TimerText" Margin="0,10,0,10" TextWrapping="Wrap" />
+      <StackPanel x:Name="PlannerPanel">
+       <TextBlock Text="Planner suggestions — deadlines stay under your control" Style="{StaticResource SectionTitle}" />
+       <WrapPanel Margin="0,8,0,8"><TextBlock Text="Available minutes after planned activities" VerticalAlignment="Center" /><TextBox x:Name="CapacityBox" Text="480" Width="65" Margin="8,0" /><TextBlock Text="Estimate per task" VerticalAlignment="Center" /><TextBox x:Name="EstimateBox" Text="30" Width="65" Margin="8,0" /></WrapPanel>
+       <DataGrid x:Name="PlannerGrid" AutoGenerateColumns="False" IsReadOnly="True" Height="140"><DataGrid.Columns><DataGridTextColumn Header="Suggested task" Binding="{Binding Title}" Width="*" /><DataGridTextColumn Header="Minutes" Binding="{Binding Minutes}" Width="75" /><DataGridTextColumn Header="Capacity" Binding="{Binding Reason}" Width="260" /></DataGrid.Columns></DataGrid>
+      </StackPanel>
+      <TextBlock Text="Automation builder" Style="{StaticResource SectionTitle}" Margin="0,15,0,8" />
+      <TextBox x:Name="RuleNameBox" AutomationProperties.Name="Rule name" Text="Deadline urgency" />
+      <WrapPanel Margin="0,8,0,8">
+       <TextBlock Text="WHEN" VerticalAlignment="Center" /><ComboBox x:Name="RuleTriggerBox" SelectedIndex="0" Width="130"><ComboBoxItem Content="Overdue" /><ComboBoxItem Content="Due tomorrow" /></ComboBox>
+       <TextBlock Text="IF text contains" VerticalAlignment="Center" /><TextBox x:Name="RuleContainsBox" Width="120" />
+       <TextBlock Text="THEN priority" VerticalAlignment="Center" /><ComboBox x:Name="RulePriorityBox" SelectedIndex="0" Width="90"><ComboBoxItem Content="Urgent" /><ComboBoxItem Content="High" /><ComboBoxItem Content="Normal" /><ComboBoxItem Content="Low" /></ComboBox>
+      </WrapPanel>
+      <WrapPanel><Button Content="Add rule" Click="OnAddRule" /><Button Content="Run rules now" Click="OnRunRules" /><Button Content="Disable selected rule" Click="OnDisableRule" /></WrapPanel>
+      <ComboBox x:Name="RulesBox" DisplayMemberPath="Name" Margin="0,8,0,8" />
+      <DataGrid x:Name="RuleHistoryGrid" AutoGenerateColumns="True" IsReadOnly="True" Height="100" />
+      <Button Content="Undo selected automatic change" Click="OnUndoRule" HorizontalAlignment="Left" />
+      <TextBlock Text="Portable task exchange (task fields only; existing IDs are preserved)" Style="{StaticResource SectionTitle}" Margin="0,15,0,8" />
+      <WrapPanel><Button Content="Export JSON" Tag="JSON" Click="OnExportTasks" /><Button Content="Export CSV" Tag="CSV" Click="OnExportTasks" /><Button Content="Import task file" Click="OnImportTasks" /></WrapPanel>
+      <TextBlock x:Name="ProductivityStatusText" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" Margin="0,12,0,0" />
      </StackPanel>
      <StackPanel x:Name="TaskPanel" Visibility="Collapsed">
       <TextBlock x:Name="TaskHeading" Text="Tasks" FontSize="30" FontWeight="SemiBold" />
