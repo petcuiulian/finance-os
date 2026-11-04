@@ -4,7 +4,8 @@
 - Schema v7 adds manual time entries, automation rules/history, completion events and saved productivity settings. Advanced page exposes workload metrics, daily completion bars, capacity suggestions, bulk priority updates, filters, task template and JSON/CSV task exchange.
 - Rules support overdue/tomorrow triggers, text conditions and priority actions. First matching rule wins, transactions prevent duplicate actions, and guarded undo preserves later edits. No network integrations or messages.
 - Timer explicitly includes elapsed time while closed; task exchange is not a full database backup and imports task fields without project/category relationships. Planner uses user-entered remaining capacity and a shared effort estimate; no deadlines change.
-- PASS locally: Release WPF cross-build, 34 tests, formatting. Windows CI pending. Remaining detailed master-spec extensions are retained in ROADMAP; physical M3/M4 checks remain open.
+- PASS: [CI run 41809199980](https://github.com/petcuiulian/finance-os/actions/runs/41809199980), implementation `6ae77b5`: locked restore, Release build, 34 tests and formatting on Linux and Windows. Windows development/published desktop smoke includes Productivity dashboard rendering; native toast API smoke also passed.
+- Remaining detailed master-spec extensions are retained in ROADMAP; physical M3/M4 checks and manual M5 usability/accessibility review remain open. Next implementation milestone is M6 hardening; do not treat task exchange as a full backup.
 
 
 ## 2026-11-04 — M4 workflow implementation and automated acceptance
