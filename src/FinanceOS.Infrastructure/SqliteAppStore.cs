@@ -5,7 +5,7 @@ namespace FinanceOS.Infrastructure;
 
 public sealed class SqliteAppStore : IAppStore
 {
-    public const int CurrentSchemaVersion = 5;
+    public const int CurrentSchemaVersion = 6;
     private readonly string _path;
 
     public SqliteAppStore(string path)
@@ -124,6 +124,53 @@ public sealed class SqliteAppStore : IAppStore
                 );
                 CREATE INDEX ix_time_blocks_start ON time_blocks(start_utc,end_utc);
                 PRAGMA user_version = 5;
+                """);
+        }
+        if (version <= 5)
+        {
+            Execute(connection, transaction, """
+                CREATE TABLE workflow_templates (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE);
+                CREATE TABLE workflow_stages (id TEXT PRIMARY KEY, template_id TEXT NOT NULL REFERENCES workflow_templates(id) ON DELETE CASCADE,
+                    name TEXT NOT NULL, position INTEGER NOT NULL, due_offset_days INTEGER, reminder_minutes INTEGER,
+                    UNIQUE(template_id,position));
+                CREATE TABLE task_workflows (task_id TEXT PRIMARY KEY REFERENCES tasks(id) ON DELETE CASCADE,
+                    template_id TEXT NOT NULL REFERENCES workflow_templates(id), stage_id TEXT NOT NULL REFERENCES workflow_stages(id));
+                CREATE TABLE task_stage_deadlines (task_id TEXT PRIMARY KEY REFERENCES tasks(id) ON DELETE CASCADE,
+                    stage_id TEXT NOT NULL REFERENCES workflow_stages(id), due_date TEXT NOT NULL,
+                    reminder_id TEXT REFERENCES reminders(id));
+                CREATE TABLE task_waiting (task_id TEXT PRIMARY KEY REFERENCES tasks(id) ON DELETE CASCADE,
+                    contact TEXT NOT NULL, expected_date TEXT, followup_date TEXT NOT NULL, started_utc TEXT NOT NULL, reminder_id TEXT REFERENCES reminders(id), active INTEGER NOT NULL CHECK(active IN (0,1)));
+                CREATE TABLE waiting_history (id TEXT PRIMARY KEY, task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+                    action TEXT NOT NULL, note TEXT NOT NULL, at_utc TEXT NOT NULL);
+                CREATE INDEX ix_waiting_followup ON task_waiting(active,followup_date);
+                CREATE TABLE task_dependencies (task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+                    depends_on_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+                    PRIMARY KEY(task_id,depends_on_id), CHECK(task_id!=depends_on_id));
+                CREATE TABLE recurring_rules (id TEXT PRIMARY KEY, source_task_id TEXT NOT NULL REFERENCES tasks(id),
+                    recurrence TEXT NOT NULL CHECK(recurrence IN ('Daily','Weekly','Monthly')),
+                    next_date TEXT NOT NULL, anchor_day INTEGER NOT NULL CHECK(anchor_day BETWEEN 1 AND 31), enabled INTEGER NOT NULL DEFAULT 1 CHECK(enabled IN (0,1)));
+                CREATE TABLE recurring_instances (rule_id TEXT NOT NULL REFERENCES recurring_rules(id),
+                    occurrence_date TEXT NOT NULL, task_id TEXT NOT NULL REFERENCES tasks(id), PRIMARY KEY(rule_id,occurrence_date));
+                CREATE TABLE custom_statuses (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE);
+                ALTER TABLE tasks ADD COLUMN custom_status_id TEXT REFERENCES custom_statuses(id);
+                ALTER TABLE checklist_items ADD COLUMN stage_id TEXT REFERENCES workflow_stages(id);
+                INSERT INTO workflow_templates VALUES ('intercompany','Intercompany Invoicing'),('ap','Accounts Payable'),
+                    ('month-end','Month-End Closing'),('follow-up','Request Follow-Up'),('controls','Recurring Financial Controls');
+                INSERT INTO workflow_stages(id,template_id,name,position) VALUES
+                    ('ic-receive','intercompany','Receive request',0),('ic-validate','intercompany','Validate information',1),
+                    ('ic-process','intercompany','Process invoice',2),('ic-verify','intercompany','Verify posting',3),('ic-close','intercompany','Close',4),
+                    ('ap-receive','ap','Receive invoice',0),('ap-docs','ap','Check documentation',1),('ap-approval','ap','Verify approval',2),
+                    ('ap-resolve','ap','Resolve discrepancies',3),('ap-process','ap','Process invoice',4),('ap-close','ap','Confirm completion',5),
+                    ('me-prepare','month-end','Prepare closing checklist',0),('me-reconcile','month-end','Reconcile accounts',1),
+                    ('me-exceptions','month-end','Resolve exceptions',2),('me-controls','month-end','Complete controls',3),
+                    ('me-report','month-end','Submit reporting',4),('me-close','month-end','Confirm closure',5),
+                    ('fu-received','follow-up','Request received',0),('fu-info','follow-up','Information needed',1),
+                    ('fu-wait','follow-up','Waiting for requester',2),('fu-response','follow-up','Response received',3),
+                    ('fu-close','follow-up','Completed',4),
+                    ('rc-daily','controls','Daily controls',0),('rc-weekly','controls','Weekly checks',1),
+                    ('rc-monthly','controls','Monthly reconciliation',2),('rc-quarterly','controls','Quarterly reporting',3),
+                    ('rc-yearly','controls','Year-end procedures',4);
+                PRAGMA user_version = 6;
                 """);
         }
         cancellationToken.ThrowIfCancellationRequested();

@@ -19,13 +19,15 @@ public partial class MainWindow : Window, INotificationSink
     private StorageStatus? _lastStatus;
     public bool SupportsSystemNotifications => OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041);
 
-    public MainWindow(IAppStore store, ITaskStore tasks, SqliteReminderStore reminders)
+    public MainWindow(IAppStore store, ITaskStore tasks, SqliteReminderStore reminders, SqliteWorkflowStore workflows)
     {
         InitializeComponent();
         _store = store;
         _tasks = tasks;
         _reminders = reminders;
+        _workflows = workflows;
         InitializeReminderLifecycle();
+        InitializeWorkflowLifecycle();
         Closed += (_, _) => _lifetime.Cancel();
         Render();
     }
@@ -45,7 +47,9 @@ public partial class MainWindow : Window, INotificationSink
             SaveTaskButton.IsEnabled = true;
             ApplyTheme();
             Render();
+            await _workflows.ReconcileRecurringAsync(DateOnly.FromDateTime(DateTime.Today));
             await RefreshTasksAsync();
+            await RefreshWorkflowsAsync();
             await ReconcileRemindersAsync();
         }
         catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
@@ -136,6 +140,7 @@ public partial class MainWindow : Window, INotificationSink
         _ = RefreshTasksAsync();
         if (_page == "Calendar") _ = RefreshCalendarAsync();
         if (_page == "Reminders") _ = ReconcileRemindersAsync();
+        if (_page is "Workflows" or "Waiting") _ = RefreshWorkflowsAsync();
     }
 
     private void RenderPage()
@@ -144,6 +149,8 @@ public partial class MainWindow : Window, INotificationSink
         CalendarPanel.Visibility = _page == "Calendar" ? Visibility.Visible : Visibility.Collapsed;
         OverviewPanel.Visibility = _page == "Overview" ? Visibility.Visible : Visibility.Collapsed;
         SettingsPanel.Visibility = _page == "Settings" ? Visibility.Visible : Visibility.Collapsed;
+        WorkflowsPanel.Visibility = _page == "Workflows" ? Visibility.Visible : Visibility.Collapsed;
+        WaitingPanel.Visibility = _page == "Waiting" ? Visibility.Visible : Visibility.Collapsed;
         TaskPanel.Visibility = _page is "Tasks" or "MyDay" or "Archive" or "Trash" ? Visibility.Visible : Visibility.Collapsed;
         TaskHeading.Text = T(_page, _page switch { "MyDay" => "Ziua mea", "Tasks" => "Sarcini", "Archive" => "Arhivă", "Trash" => "Coș", _ => _page });
         PageTitle.Text = T(_page, _page == "Overview" ? "Prezentare" : "Setări");
@@ -153,6 +160,8 @@ public partial class MainWindow : Window, INotificationSink
         TasksButton.SetResourceReference(Button.BackgroundProperty, _page == "Tasks" ? "AccentSubtleBrush" : "SurfaceBrush");
         ArchiveButton.SetResourceReference(Button.BackgroundProperty, _page == "Archive" ? "AccentSubtleBrush" : "SurfaceBrush");
         TrashButton.SetResourceReference(Button.BackgroundProperty, _page == "Trash" ? "AccentSubtleBrush" : "SurfaceBrush");
+        WorkflowsButton.SetResourceReference(Button.BackgroundProperty, _page == "Workflows" ? "AccentSubtleBrush" : "SurfaceBrush");
+        WaitingButton.SetResourceReference(Button.BackgroundProperty, _page == "Waiting" ? "AccentSubtleBrush" : "SurfaceBrush");
     }
 
     private string T(string english, string romanian) => _preferences.Language == "ro" ? romanian : english;
@@ -168,6 +177,8 @@ public partial class MainWindow : Window, INotificationSink
         TasksButton.Content = T("_Tasks", "_Sarcini");
         ArchiveButton.Content = T("_Archive", "_Arhivă");
         TrashButton.Content = T("T_rash", "_Coș");
+        WorkflowsButton.Content = T("Workflows", "Fluxuri de lucru");
+        WaitingButton.Content = T("Waiting", "În așteptare");
         DeleteTaskButton.Content = T("Move to _trash…", "Mută în _coș…");
         AdvancedFieldsPanel.Visibility = _preferences.Mode == "Advanced" ? Visibility.Visible : Visibility.Collapsed;
         CalendarButton.Content = T("Calendar", "Calendar");
@@ -245,6 +256,7 @@ public partial class MainWindow : Window, INotificationSink
         if (task is null) return;
         _editing = task;
         _reminderTask = task;
+        _workflowSelectedTask = task;
         TaskTitleBox.Text = task.Title;
         TaskNotesBox.Text = task.Notes;
         TaskDuePicker.SelectedDate = task.DueDate?.ToDateTime(TimeOnly.MinValue);
@@ -349,6 +361,7 @@ public partial class MainWindow : Window, INotificationSink
         try { await action(); await RefreshTasksAsync(); }
         catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
         catch (ArgumentException ex) { TaskErrorText.Text = ex.Message; }
+        catch (InvalidOperationException ex) { TaskErrorText.Text = ex.Message; }
         catch (Exception) { TaskErrorText.Text = T("Task change failed. Existing data was preserved.", "Modificarea sarcinii a eșuat. Datele existente au fost păstrate."); }
         finally
         {

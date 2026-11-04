@@ -55,12 +55,35 @@ public sealed class SqliteTaskStore(string path) : ITaskStore
         if (status is not ("Open" or "Done" or "Archived")) throw new ArgumentException("Invalid task status.", nameof(status));
         cancellationToken.ThrowIfCancellationRequested();
         using var db = Open();
+        using var transaction = db.BeginTransaction();
         using var command = db.CreateCommand();
-        command.CommandText = "UPDATE tasks SET status=$status,deleted_utc=NULL,updated_utc=$now WHERE id=$id;";
+        command.Transaction = transaction;
+        command.CommandText = """
+            UPDATE tasks SET status=$status,deleted_utc=NULL,updated_utc=$now WHERE id=$id
+            AND ($status!='Done' OR NOT EXISTS (
+                SELECT 1 FROM task_dependencies d JOIN tasks prerequisite ON prerequisite.id=d.depends_on_id
+                WHERE d.task_id=$id AND prerequisite.status!='Done'));
+            """;
         command.Parameters.AddWithValue("$status", status);
         command.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture));
         command.Parameters.AddWithValue("$id", id);
-        if (command.ExecuteNonQuery() != 1) throw new KeyNotFoundException("Task was not found.");
+        if (command.ExecuteNonQuery() != 1) throw new InvalidOperationException("Task missing or has incomplete prerequisites.");
+        if (status is "Done" or "Archived")
+        {
+            using var waiting = db.CreateCommand();
+            waiting.Transaction = transaction;
+            waiting.CommandText = "UPDATE task_waiting SET active=0 WHERE task_id=$id AND active=1;";
+            waiting.Parameters.AddWithValue("$id", id);
+            waiting.ExecuteNonQuery();
+            using var cancel = db.CreateCommand();
+            cancel.Transaction = transaction;
+            cancel.CommandText = "UPDATE reminders SET enabled=0 WHERE id=(SELECT reminder_id FROM task_waiting WHERE task_id=$id);";
+            cancel.Parameters.AddWithValue("$id", id);
+            cancel.ExecuteNonQuery();
+            cancel.CommandText = "UPDATE reminders SET enabled=0 WHERE id=(SELECT reminder_id FROM task_stage_deadlines WHERE task_id=$id);";
+            cancel.ExecuteNonQuery();
+        }
+        transaction.Commit();
     }, cancellationToken);
 
     // Deletion is recoverable. M6 may add an explicit permanent purge after backup policy is settled.

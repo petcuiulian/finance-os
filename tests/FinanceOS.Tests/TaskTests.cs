@@ -84,7 +84,7 @@ public sealed class TaskTests : IDisposable
             cmd.ExecuteNonQuery();
         }
         var app = new SqliteAppStore(Database);
-        Assert.Equal(new StorageStatus(5, 5), await app.OpenSessionAsync());
+        Assert.Equal(new StorageStatus(6, 5), await app.OpenSessionAsync());
         Assert.Equal(new WorkspacePreferences("Dark", "ro", "Advanced", true), await app.ReadPreferencesAsync());
         Assert.Empty(await Tasks.ListAsync(new TaskQuery("Tasks")));
     }
@@ -103,13 +103,15 @@ public sealed class TaskTests : IDisposable
                 CREATE TABLE tasks (id TEXT PRIMARY KEY,title TEXT NOT NULL,notes TEXT NOT NULL,due_date TEXT,
                     priority TEXT NOT NULL,status TEXT NOT NULL,project_id TEXT,category_id TEXT,
                     created_utc TEXT NOT NULL,updated_utc TEXT NOT NULL);
+                CREATE TABLE checklist_items (id TEXT PRIMARY KEY,task_id TEXT NOT NULL,title TEXT NOT NULL,
+                    is_done INTEGER NOT NULL,position INTEGER NOT NULL);
                 INSERT INTO tasks VALUES ('existing','Existing task','','2026-11-04','High','Open',NULL,NULL,
                     '2026-11-03T12:00:00+00:00','2026-11-03T12:00:00+00:00');
                 PRAGMA user_version=3;
                 """;
             cmd.ExecuteNonQuery();
         }
-        Assert.Equal(new StorageStatus(5, 3), await new SqliteAppStore(Database).OpenSessionAsync());
+        Assert.Equal(new StorageStatus(6, 3), await new SqliteAppStore(Database).OpenSessionAsync());
         Assert.Equal("Existing task", Assert.Single(await Tasks.ListAsync(new TaskQuery("Tasks"))).Title);
     }
 

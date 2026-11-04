@@ -35,13 +35,13 @@
 - [-] Test restart/crash recovery, overdue events, DST/time zones, consent and quiet-hour behavior. Automated cases pass; physical sleep/resume and Windows reboot still require a target device.
 - [x] Implement day/week/month/agenda ranges with deadlines and UTC time blocks.
 **Gate: OPEN — target Windows lifecycle acceptance required.** [CI run 41804426325](https://github.com/petcuiulian/finance-os/actions/runs/41804426325) verified implementation `b681ed1`: builds, formatting and 24 tests on Linux and Windows; Windows development/published smoke recovered reminders and blocks after forced process termination; native toast test verified submission in Windows notification history. This does not prove physical sleep/resume, reboot or visible-banner delivery.
-See [M3 validation](M3_VALIDATION.md) for recovery semantics, target-device steps and the remaining master-spec extensions. No requirement is removed. M4 has not started.
+See [M3 validation](M3_VALIDATION.md) for recovery semantics, target-device steps and the remaining master-spec extensions. No requirement is removed. M4 proceeded at the user's explicit request while this physical-device gate remains open.
 
 ## M4 — Corporate finance workflows
-- [ ] Customizable workflow templates: Intercompany, AP, Month-End, Follow-Up, Recurring Controls.
-- [ ] Waiting-for-Response: requester/contact, expected response and follow-up, business-day logic and history.
-- [ ] Recurring tasks, dependencies, configurable statuses, editable Kanban and stage-based checklists.
-**Gate:** realistic high-volume accountant scenario including approvals/requests/closing works without spreadsheets.
+- [x] Customizable workflow templates: Intercompany, AP, Month-End, Follow-Up, Recurring Controls; create/rename/reorder stages and configure entry-relative deadlines/reminders.
+- [x] Waiting-for-Response: contact, expected response, follow-up reminder, business-day count/default and durable history.
+- [x] Recurring tasks, dependencies, configurable statuses, editable Kanban and stage-based checklists.
+**Gate: automated scenario passed; Windows UI acceptance pending.** A 100-task synthetic accountant case covers 60 AP requests, 40 closing items, 20 waiting approvals and 10 dependencies. Linux build and 29 tests pass. Windows CI and physical UX review remain to be recorded.
 
 ## M5 — Advanced productivity
 - [ ] WHEN/IF/THEN rule engine with loop/conflict/idempotency safeguards and traceability.
@@ -59,7 +59,7 @@ See [M3 validation](M3_VALIDATION.md) for recovery semantics, target-device step
 **Gate:** independently verified desktop product; not just a working dev server.
 
 ## Current next task
-**M3 — complete target-device lifecycle validation and remaining reminder/calendar extensions (Astra High).** M3 implementation and automated checks are recorded above; do not mark the gate complete or begin M4 before the required Windows evidence. Keep the existing detailed M1–M6 milestones and all original features; the shorter model-routing table does not remove scope.
+**M4 — finish Windows CI and workflow UI acceptance; M3 physical-device gate remains open.** The user explicitly requested M4 despite the earlier sequencing note. After M4 acceptance, M5 is the next implementation milestone. Keep the M3 target-device work and all original features in scope.
 
 ## Scope management
 - No feature is canceled because it is in a later milestone.

@@ -14,11 +14,11 @@ public sealed class StorageTests : IDisposable
     public async Task MigrationAndSessionSurviveReopening()
     {
         var first = await new SqliteAppStore(Database).OpenSessionAsync();
-        Assert.Equal(new StorageStatus(5, 1), first);
+        Assert.Equal(new StorageStatus(6, 1), first);
         var second = new SqliteAppStore(Database);
         Assert.Equal(first, await second.ReadStatusAsync());
-        Assert.Equal(new StorageStatus(5, 2), await second.OpenSessionAsync());
-        Assert.Equal(new StorageStatus(5, 2), await new SqliteAppStore(Database).ReadStatusAsync());
+        Assert.Equal(new StorageStatus(6, 2), await second.OpenSessionAsync());
+        Assert.Equal(new StorageStatus(6, 2), await new SqliteAppStore(Database).ReadStatusAsync());
     }
 
     [Fact]
@@ -27,7 +27,7 @@ public sealed class StorageTests : IDisposable
         Directory.CreateDirectory(Path.GetDirectoryName(Database)!);
         Execute("CREATE TABLE app_state (id INTEGER PRIMARY KEY, launch_count INTEGER NOT NULL); INSERT INTO app_state VALUES (1, 7); PRAGMA user_version = 1;");
         var store = new SqliteAppStore(Database);
-        Assert.Equal(new StorageStatus(5, 8), await store.OpenSessionAsync());
+        Assert.Equal(new StorageStatus(6, 8), await store.OpenSessionAsync());
         Assert.Equal(new WorkspacePreferences("Light", "en", "Simple", false), await store.ReadPreferencesAsync());
     }
 

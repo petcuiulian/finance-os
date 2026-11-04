@@ -17,7 +17,8 @@
      <Button x:Name="TrashButton" Content="T_rash" Tag="Trash" Click="OnNavigate" Style="{StaticResource NavButton}" />
      <Button x:Name="CalendarButton" Content="Calendar" Tag="Calendar" Click="OnNavigate" Style="{StaticResource NavButton}" />
      <Button x:Name="RemindersButton" Content="Reminders" Tag="Reminders" Click="OnNavigate" Style="{StaticResource NavButton}" />
-     <Button x:Name="WorkflowsButton" Content="Workflows · M4" IsEnabled="False" Style="{StaticResource NavButton}" />
+     <Button x:Name="WorkflowsButton" Content="Workflows" Tag="Workflows" Click="OnNavigate" Style="{StaticResource NavButton}" />
+     <Button x:Name="WaitingButton" Content="Waiting" Tag="Waiting" Click="OnNavigate" Style="{StaticResource NavButton}" />
      <Button x:Name="ProjectsButton" Content="Projects · M4" IsEnabled="False" Style="{StaticResource NavButton}" />
      <Button x:Name="AnalyticsButton" Content="Analytics · M5" IsEnabled="False" Style="{StaticResource NavButton}" />
     </StackPanel>
@@ -108,6 +109,86 @@
        </WrapPanel>
       </StackPanel></Border>
       <TextBlock x:Name="TaskErrorText" Style="{StaticResource MutedText}" Margin="0,12,0,0" AutomationProperties.LiveSetting="Polite" />
+     </StackPanel>
+     <StackPanel x:Name="WorkflowsPanel" Visibility="Collapsed">
+      <TextBlock Text="Workflows / Fluxuri" FontSize="30" FontWeight="SemiBold" />
+      <TextBlock Text="Templates and stages are editable. Select a task on the Tasks page before adding it to a stage." Style="{StaticResource MutedText}" Margin="0,8,0,12" />
+      <WrapPanel>
+       <ComboBox x:Name="WorkflowTemplateBox" Width="250" DisplayMemberPath="Name" SelectionChanged="OnWorkflowTemplateChanged" Margin="0,0,8,8" />
+       <TextBox x:Name="WorkflowNameBox" Width="180" AutomationProperties.Name="Workflow template name" Margin="0,0,8,8" />
+       <Button Content="Create template" Click="OnCreateTemplate" Margin="0,0,8,8" />
+       <Button Content="Rename template" Click="OnRenameTemplate" Margin="0,0,8,8" />
+      </WrapPanel>
+      <WrapPanel>
+       <ComboBox x:Name="WorkflowStageBox" Width="250" DisplayMemberPath="Name" SelectionChanged="OnWorkflowStageChanged" Margin="0,0,8,8" />
+       <TextBox x:Name="WorkflowStageNameBox" Width="180" AutomationProperties.Name="Stage name" Margin="0,0,8,8" />
+       <Button Content="Add stage" Click="OnAddStage" Margin="0,0,8,8" />
+       <Button Content="Rename stage" Click="OnRenameStage" Margin="0,0,8,8" />
+       <Button Content="↑" Click="OnMoveStageUp" Margin="0,0,8,8" ToolTip="Move stage left" />
+       <Button Content="↓" Click="OnMoveStageDown" Margin="0,0,8,8" ToolTip="Move stage right" />
+      </WrapPanel>
+      <WrapPanel>
+       <TextBlock Text="Stage due after days" VerticalAlignment="Center" Margin="0,0,8,8" />
+       <TextBox x:Name="StageDueDaysBox" Width="55" AutomationProperties.Name="Stage due offset in days" Margin="0,0,8,8" />
+       <TextBlock Text="Remind minutes before" VerticalAlignment="Center" Margin="0,0,8,8" />
+       <TextBox x:Name="StageReminderMinutesBox" Width="75" AutomationProperties.Name="Stage reminder offset in minutes" Margin="0,0,8,8" />
+       <Button Content="Save stage deadline" Click="OnSaveStageDeadline" Margin="0,0,8,8" />
+      </WrapPanel>
+      <WrapPanel Margin="0,0,0,12">
+       <Button x:Name="AssignWorkflowButton" Content="Add selected task to selected stage" Click="OnAssignWorkflow" Margin="0,0,8,8" />
+       <TextBox x:Name="NewStatusBox" Width="150" AutomationProperties.Name="Custom status" Margin="0,0,8,8" />
+       <Button Content="Add status" Click="OnAddCustomStatus" Margin="0,0,8,8" />
+       <ComboBox x:Name="CustomStatusBox" Width="150" Margin="0,0,8,8" />
+       <Button Content="Apply status to selected task" Click="OnApplyCustomStatus" Margin="0,0,8,8" />
+      </WrapPanel>
+      <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Height="310">
+       <StackPanel x:Name="KanbanHost" Orientation="Horizontal" />
+      </ScrollViewer>
+      <Border Style="{StaticResource Card}" Margin="0,15,0,0"><StackPanel>
+       <TextBlock x:Name="KanbanSelectedText" Text="Select a card for its stage checklist." Style="{StaticResource SectionTitle}" />
+       <ItemsControl x:Name="StageChecklistList" Margin="0,8,0,8" />
+       <WrapPanel>
+        <TextBox x:Name="ChecklistTitleBox" Width="240" AutomationProperties.Name="Checklist item" Margin="0,0,8,8" />
+        <Button Content="Add checklist item" Click="OnAddChecklist" Margin="0,0,8,8" />
+       </WrapPanel>
+      </StackPanel></Border>
+      <TextBlock x:Name="WorkflowStatusText" AutomationProperties.LiveSetting="Polite" Margin="0,10,0,0" />
+     </StackPanel>
+     <StackPanel x:Name="WaitingPanel" Visibility="Collapsed">
+      <TextBlock Text="Waiting for response / Aștept răspuns" FontSize="30" FontWeight="SemiBold" />
+      <TextBlock Text="Choose an open task from Tasks, then record the contact and follow-up. No messages are sent automatically." Style="{StaticResource MutedText}" Margin="0,8,0,12" />
+      <DataGrid x:Name="WaitingGrid" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" MaxHeight="260" MinHeight="130" SelectionChanged="OnWaitingSelected">
+       <DataGrid.Columns>
+        <DataGridTextColumn Header="Task" Binding="{Binding Title}" Width="2*" />
+        <DataGridTextColumn Header="Contact" Binding="{Binding Contact}" Width="*" />
+        <DataGridTextColumn Header="Expected" Binding="{Binding ExpectedDate}" Width="*" />
+        <DataGridTextColumn Header="Follow-up" Binding="{Binding FollowupDate}" Width="*" />
+       </DataGrid.Columns>
+      </DataGrid>
+      <WrapPanel Margin="0,12,0,12">
+       <TextBox x:Name="WaitingContactBox" Width="200" AutomationProperties.Name="Requester or contact" Margin="0,0,8,8" />
+       <DatePicker x:Name="WaitingExpectedPicker" Width="145" Margin="0,0,8,8" />
+       <DatePicker x:Name="WaitingFollowupPicker" Width="145" Margin="0,0,8,8" />
+       <Button Content="Start waiting" Click="OnStartWaiting" Margin="0,0,8,8" />
+       <Button Content="Response received" Click="OnResolveWaiting" Margin="0,0,8,8" />
+      </WrapPanel>
+      <TextBox x:Name="WaitingNoteBox" AutomationProperties.Name="Follow-up note" MaxLength="2000" Margin="0,0,0,8" />
+      <TextBlock x:Name="WaitingDetailText" Style="{StaticResource MutedText}" />
+      <ItemsControl x:Name="WaitingHistoryList" Margin="0,8,0,0" />
+      <TextBlock x:Name="WaitingStatusText" AutomationProperties.LiveSetting="Polite" />
+      <Border Style="{StaticResource Card}" Margin="0,16,0,0"><StackPanel>
+       <TextBlock Text="Repeat selected task" Style="{StaticResource SectionTitle}" />
+       <WrapPanel Margin="0,10,0,0">
+        <ComboBox x:Name="TaskRepeatBox" Width="110" SelectedIndex="0" Margin="0,0,8,8">
+         <ComboBoxItem Content="Daily"/><ComboBoxItem Content="Weekly"/><ComboBoxItem Content="Monthly"/>
+        </ComboBox>
+        <DatePicker x:Name="TaskRepeatDate" Width="145" Margin="0,0,8,8" />
+        <Button Content="Schedule recurrence" Click="OnAddRecurring" Margin="0,0,8,8" />
+       </WrapPanel>
+       <TextBlock Text="Dependency: selected task waits for another task to complete." Style="{StaticResource MutedText}" />
+       <ComboBox x:Name="DependencyTaskBox" Width="260" DisplayMemberPath="Title" Margin="0,8,0,8" />
+       <Button Content="Add dependency" Click="OnAddDependency" HorizontalAlignment="Left" />
+      </StackPanel></Border>
      </StackPanel>
      <StackPanel x:Name="RemindersPanel" Visibility="Collapsed">
       <TextBlock Text="Reminders / Mementouri" FontSize="28" FontWeight="SemiBold" />

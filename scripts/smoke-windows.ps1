@@ -6,7 +6,7 @@ $exe = (Resolve-Path $ExecutablePath).Path
 function Read-LaunchCount($window) {
     $elements = $window.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
     foreach ($element in $elements) {
-        if ($element.Current.Name -match '(?:Local SQLite ready · schema|SQLite local pregătit · schema) 5 · (?:workspace launches|porniri) (\d+)$') { return [long]$Matches[1] }
+        if ($element.Current.Name -match '(?:Local SQLite ready · schema|SQLite local pregătit · schema) 6 · (?:workspace launches|porniri) (\d+)$') { return [long]$Matches[1] }
     }
     return $null
 }
@@ -83,18 +83,39 @@ function Run-Smoke([bool]$changePreferences, [bool]$forceCrash = $false) {
             Start-Sleep -Milliseconds 100
         } while ((Get-Date) -lt $deadline)
         if (!$found) { throw 'Task was not visible after creation or restart.' }
-        if ($changePreferences) {
-            $selected = $false
-            foreach ($row in $rows) {
-                if ($row.Current.Name -like '*M2 smoke task*') {
-                    $pattern = $null
-                    if ($row.TryGetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern, [ref]$pattern)) {
-                        $pattern.Select(); $selected = $true; break
-                    }
+        $selected = $false
+        foreach ($row in $rows) {
+            if ($row.Current.Name -like '*M2 smoke task*') {
+                $pattern = $null
+                if ($row.TryGetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern, [ref]$pattern)) {
+                    $pattern.Select(); $selected = $true; break
                 }
             }
-            if (!$selected) { throw 'Task row could not be selected for reminder.' }
         }
+        if (!$selected) { throw 'Task row could not be selected for workflow and reminder.' }
+        Invoke-ById $window 'WorkflowsButton'
+        if ($changePreferences) {
+            $deadline = (Get-Date).AddSeconds(5)
+            do {
+                $status = Find-ById $window 'WorkflowStatusText'
+                if ($null -ne $status -and $status.Current.Name -match '\d+ cards · \d+ stages') { break }
+                Start-Sleep -Milliseconds 100
+            } while ((Get-Date) -lt $deadline)
+            if ($null -eq $status -or $status.Current.Name -notmatch '\d+ cards · \d+ stages') { throw 'Workflow stages did not load.' }
+            Invoke-ById $window 'AssignWorkflowButton'
+        }
+        $deadline = (Get-Date).AddSeconds(5)
+        do {
+            $kanban = Find-ById $window 'KanbanHost'
+            $cards = $kanban.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
+            $cardFound = $false
+            foreach ($card in $cards) { if ($card.Current.Name -like '*M2 smoke task*') { $cardFound = $true; break } }
+            if ($cardFound) { break }
+            Start-Sleep -Milliseconds 100
+        } while ((Get-Date) -lt $deadline)
+        if (!$cardFound) { throw 'Workflow card was not visible after assignment or restart.' }
+        Invoke-ById $window 'WaitingButton'
+        if ($null -eq (Find-ById $window 'WaitingGrid')) { throw 'Waiting view was not visible.' }
         Invoke-ById $window 'RemindersButton'
         if ($changePreferences) {
             $time = (Find-ById $window 'ReminderTimeBox').GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern)

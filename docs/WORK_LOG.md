@@ -1,5 +1,12 @@
 # Durable work log
 
+## 2026-11-04 — M4 workflow implementation; Windows acceptance pending
+- Added transactional schema v6 and five editable finance templates, editable Kanban stages/cards, stage checklists, display statuses and entry-relative stage deadlines/reminders.
+- Added waiting-for-response with contact, expected/follow-up dates, business-day count/default, local reminder and durable history. Added daily/weekly/monthly task generation with month-end anchors and cycle-checked dependencies that block premature completion.
+- **PASS (Linux):** locked restore, Release cross-build including WPF XAML, formatting and 29/29 tests. Integration tests cover workflow persistence, reminders, recurrence, dependencies and a synthetic 100-task AP/closing/approval scenario.
+- **PENDING:** Windows CI desktop smoke and physical high-volume UI review. M3 sleep/reboot/tray/visible-toast target-device checks remain open by explicit separation. No external communication is sent.
+- **Next:** verify Windows CI and fix any failures; then M5 implementation when requested, while retaining M3 physical validation.
+
 ## 2026-11-04 — M3 implementation; lifecycle gate remains open
 - Added schema v5 reminder definitions, unique durable inbox occurrences, persisted notification options and UTC time blocks. Existing schemas upgrade transactionally.
 - Implemented recurrence/DST policies, snooze/dismiss/cancel, task navigation, quiet-hour/weekday toast eligibility, opt-in sound/toasts, explicit tray mode, launch/timer/resume reconciliation and calendar ranges with deadlines/time blocks.

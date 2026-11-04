@@ -1,6 +1,6 @@
 # FINANCE OS
 
-Offline-first Windows 10 (build 19041+)/11 finance productivity application. M0–M3 provide a native .NET 10/WPF shell, persistent preferences and a working local task manager. Quick Add, My Day, search, editing, completion, Archive and recoverable Trash work without login or network access. Reminders, notification inbox, Windows toasts and calendar ranges are implemented; advanced finance workflows remain on the roadmap. This is not the finished release product.
+Offline-first Windows 10 (build 19041+)/11 finance productivity application. M0–M4 provide a native .NET 10/WPF shell, persistent preferences, local task manager, reminders, calendar and finance workflows. Quick Add, My Day, search, editing, completion, Archive and recoverable Trash work without login or network access. This is not the finished release product.
 
 ## Develop
 
@@ -51,7 +51,7 @@ after dependency changes, then run all checks.
 
 ## Data and safety
 
-Windows data: `%LOCALAPPDATA%/FinanceOS/finance-os.db`. The database lives outside the executable directory. Schema v5 migrates previous versions in place. It stores preferences, tasks, projects, categories, references, checklist items and a recoverable Trash marker. Task actions currently cover the core list workflow; project/category/checklist editors and advanced workflow states remain later work.
+Windows data: `%LOCALAPPDATA%/FinanceOS/finance-os.db`. The database lives outside the executable directory. Schema v6 migrates previous versions in place. It stores preferences, tasks, projects, categories, references, checklist items, workflow data and a recoverable Trash marker. Project/category editors and further master-spec task fields remain later work.
 
 Use **Ctrl+N** to focus Quick Add, type a title and press Enter. Tasks and My Day show open work; choose a row to edit details or change its state. Simple mode keeps advanced details hidden while preserving them. Advanced mode exposes notes, date and priority. Archive and Trash have dedicated views; Restore returns a trashed task to its previous status. Move to Trash never erases the row. The app stores due *dates* as local calendar dates; reminder instants and original time zones are stored separately.
 
@@ -70,6 +70,10 @@ Select an open task, then open Reminders to add one-time or recurring reminders.
 Windows notifications are opt-in. Sound, weekday-only delivery and 09:00–17:00 delivery options persist locally. Keep FINANCE OS open or use its explicit tray command for live reminders. Exiting stops delivery until the next launch; no automatic startup or background service is installed. Missed reminders are recovered into the durable inbox. A toast attempt can be suppressed by Windows or interrupted by a crash; the inbox remains authoritative.
 
 Calendar offers day/week/month and a 90-day agenda, showing deadlines and time blocks. See [M3 validation](docs/M3_VALIDATION.md) for recurrence rules, verification evidence and the physical sleep/resume and tray checks still required on a target laptop.
+
+## Finance workflows
+
+Select a task in Tasks, then open Workflows to assign it to one of five seeded templates or create a custom one. Templates and stages can be renamed, stages reordered, and cards moved through the Kanban. Stage checklists, display statuses and optional entry-relative deadlines with reminders are saved locally. In Waiting, record a contact, expected response, follow-up date and notes; the follow-up produces a local reminder and a history entry. The suggested follow-up skips weekends. The same page can set a daily, weekly or monthly recurring task and a prerequisite task; incomplete prerequisites block completion. Recurrence is reconciled on launch and while the app is running. No emails, approvals or other communication are sent automatically.
 
 ## Structure and handoff
 
