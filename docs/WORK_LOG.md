@@ -1,5 +1,14 @@
 # Durable work log
 
+## 2026-11-04 — M3 implementation; lifecycle gate remains open
+- Added schema v5 reminder definitions, unique durable inbox occurrences, persisted notification options and UTC time blocks. Existing schemas upgrade transactionally.
+- Implemented recurrence/DST policies, snooze/dismiss/cancel, task navigation, quiet-hour/weekday toast eligibility, opt-in sound/toasts, explicit tray mode, launch/timer/resume reconciliation and calendar ranges with deadlines/time blocks.
+- Toast submission is at-most-once per occurrence/snooze; the durable inbox remains available if a crash or policy blocks the OS effect. No automatic startup or background service was installed.
+- **PASS:** [CI run 41804426325](https://github.com/petcuiulian/finance-os/actions/runs/41804426325), implementation `b681ed1`: locked restore, Release build, formatting, 24/24 tests on Linux and Windows. Windows development/published UI smoke verified reminder and calendar persistence after forced process termination. Native Windows toast smoke verified the submitted notification in OS history.
+- Fixed overlapping timer/user reconciliation by serializing updates and preserving selected inbox alert. OS activation registration failure cannot block app startup.
+- **UNVERIFIED:** physical laptop sleep/resume, Windows reboot, manual tray restoration, visible toast/DND behavior, accessibility/DPI and target-device performance. History receipt is not proof of a visible or read banner.
+- **Next:** perform the target-device steps and finish remaining extensions in `M3_VALIDATION.md`. Keep M3 gate open; M4 has not started.
+
 ## 2026-11-04 — M2 complete; M3 next
 - Added version 3 task/project/category/reference/checklist schema and version 4 Trash marker. Version 1–3 upgrades preserve existing settings and tasks. Due dates are local calendar dates; exact reminder instants/timezones remain M3 work.
 - Added quick capture (Ctrl+N), Tasks/My Day/Archive/Trash views, task details, due date/priority, search/filter/sort, status actions and recoverable deletion. Simple Mode hides advanced editor fields while updates preserve their values. Both modes share one database.

@@ -36,3 +36,6 @@ SQLite schema v2 adds one typed, constrained workspace preference row for theme,
 
 ## M2 task data
 SQLite schema v3 adds tasks, projects, categories, external references and checklist rows with foreign keys and status/due indexes. Schema v4 adds a deletion marker without replacing existing task rows; Trash hides rows from normal views and Restore clears the marker while keeping the prior task status. Due dates are local calendar dates; exact instants, recurrence and reminder state require explicit timezone rules in M3. Single-row task changes are SQLite atomic statements. WPF views call a typed task store; the same database backs both presentation modes. Optional future task fields are planned, not removed.
+
+## M3 reminder decisions
+Schema v5 adds notification consent/options, reminder schedules, uniquely keyed durable alerts and UTC time blocks. Reconciliation is transactional; OS toast attempts are at-most-once per occurrence/snooze, while the durable inbox provides recovery if OS submission is lost or denied. Recurrence uses its saved timezone and local anchor; custom intervals use elapsed UTC minutes. See `M3_VALIDATION.md` for DST, missed-occurrence and lifecycle semantics. The WPF target is Windows 10 build 19041 or later for native toast integration. Automatic startup is not registered.

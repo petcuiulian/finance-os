@@ -30,11 +30,12 @@
 - **UNVERIFIED — target Windows laptop/manual review required:** accessibility, high DPI, visual polish, large data performance and corporate deployment. UI Automation covers the core quick-capture flow on a Windows hosted runner.
 
 ## M3 — Reminder and calendar reliability
-- [ ] Design reminder DB, scheduling, recurrence, snooze, dismiss, duplicate prevention and missed-alarm reconciliation.
-- [ ] In-app alerts and supported Windows toast integration; tray mode / approved startup behavior as appropriate.
-- [ ] Test app restart, crash, sleep/resume, DST/time zone, overdue and missed notifications; document platform limitations.
-- [ ] Implement daily/weekly/monthly calendar + agenda, time blocks and deadlines.
-**Gate:** critical workflows verified; **Windows lifecycle/toast tests mandatory for final acceptance**.
+- [x] Implement persistent reminders, one-time/daily/weekly/monthly/custom-interval scheduling, snooze, dismissal, cancellation, duplicate prevention and missed-alert reconciliation.
+- [-] Implement in-app inbox, opt-in Windows toasts and explicit tray mode. Windows toast submission/history and desktop flows pass CI; actual tray interaction and visible banners on a target laptop remain unverified.
+- [-] Test restart/crash recovery, overdue events, DST/time zones, consent and quiet-hour behavior. Automated cases pass; physical sleep/resume and Windows reboot still require a target device.
+- [x] Implement day/week/month/agenda ranges with deadlines and UTC time blocks.
+**Gate: OPEN — target Windows lifecycle acceptance required.** [CI run 41804426325](https://github.com/petcuiulian/finance-os/actions/runs/41804426325) verified implementation `b681ed1`: builds, formatting and 24 tests on Linux and Windows; Windows development/published smoke recovered reminders and blocks after forced process termination; native toast test verified submission in Windows notification history. This does not prove physical sleep/resume, reboot or visible-banner delivery.
+See [M3 validation](M3_VALIDATION.md) for recovery semantics, target-device steps and the remaining master-spec extensions. No requirement is removed. M4 has not started.
 
 ## M4 — Corporate finance workflows
 - [ ] Customizable workflow templates: Intercompany, AP, Month-End, Follow-Up, Recurring Controls.
@@ -58,7 +59,7 @@
 **Gate:** independently verified desktop product; not just a working dev server.
 
 ## Current next task
-**M3 — Reminder and calendar reliability (Astra High).** M2 is complete; M3 has not started. Keep the existing detailed M1–M6 milestones and all original features; the shorter model-routing table does not remove scope.
+**M3 — complete target-device lifecycle validation and remaining reminder/calendar extensions (Astra High).** M3 implementation and automated checks are recorded above; do not mark the gate complete or begin M4 before the required Windows evidence. Keep the existing detailed M1–M6 milestones and all original features; the shorter model-routing table does not remove scope.
 
 ## Scope management
 - No feature is canceled because it is in a later milestone.
