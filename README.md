@@ -1,6 +1,6 @@
 # FINANCE OS
 
-Offline-first Windows 10 (build 19041+)/11 finance productivity application. M0–M5 provide a native .NET 10/WPF shell, persistent preferences, local task manager, reminders, calendar and finance workflows. Quick Add, My Day, search, editing, completion, Archive and recoverable Trash work without login or network access. This is not the finished release product.
+Offline-first Windows 10 (build 19041+)/11 finance productivity application. M0–M6 provide a native .NET 10/WPF shell, persistent preferences, local task manager, reminders, calendar and finance workflows. Quick Add, My Day, search, editing, completion, Archive and recoverable Trash work without login or network access. This is not the finished release product.
 
 ## Develop
 
@@ -60,7 +60,7 @@ Light/dark theme, EN/RO language and Simple/Advanced mode controls save immediat
 SQLite migrations and writes are transactional; foreign keys are enabled; newer
 schemas and corrupt files fail without reset. If startup fails, preserve the database,
 check directory permissions and the app version. Do not delete a database to fix an
-upgrade. Backup/restore tooling is a later milestone. Error UI omits raw paths/SQL.
+upgrade. Full backup is available in Settings; validated restore runs before startup with `--restore`. Error UI omits raw paths/SQL.
 No app telemetry, cloud access or external integrations are enabled.
 
 ## Reminders and calendar
@@ -92,3 +92,6 @@ cross-build. See the work log for checks actually executed.
 
 ## Advanced productivity
 Switch to Advanced mode and open Productivity for local metrics and daily completion trends, a persistent manual timer, saved search filters, bulk urgency changes and a reusable task template. Planner suggestions use entered remaining capacity and a common per-task estimate; deadlines stay unchanged. The visual automation builder supports overdue/tomorrow triggers, text conditions and priority changes with history/undo. Enabled rules run every minute while the app runs or through Run rules now. JSON/CSV exchange handles task fields only and skips existing IDs; it is not a database backup. Project/category links, reminders and workflows are not imported. No external integration is enabled. Detailed scope and outstanding extensions are recorded in ROADMAP.
+
+## Release candidate and recovery
+See [Windows deployment and recovery](docs/WINDOWS_RELEASE.md) and [focused security review](docs/SECURITY_REVIEW.md). Settings can back up the full SQLite workspace and export redacted diagnostics. Restore is an offline startup operation that validates the backup and retains the previous database. CI produces a portable ZIP and checksum, then tests the extracted application. Final production acceptance remains open for clean-machine, physical lifecycle, accessibility, signing and detailed functional carryovers.

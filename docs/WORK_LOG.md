@@ -1,5 +1,12 @@
 # Durable work log
 
+## 2026-11-04 — M6 hardening; final release gate open
+- Full SQLite online backup, integrity checks, offline validated restore with atomic replacement/safety copy, pre-migration snapshots, per-workspace exclusive instance lock, redacted diagnostics and guarded workflow async errors.
+- Added portable ZIP/checksum packaging and extracted-package Windows smoke. Deployment/recovery and focused security review are in WINDOWS_RELEASE.md and SECURITY_REVIEW.md.
+- PASS locally: 38 tests, Release build and formatting; NuGet direct/transitive audit reported no known vulnerabilities from the configured source. Linux synthetic 10k run: import 269 ms, search 11 ms, backup plus restore 99 ms. These are single cloud-run measurements, not target-device guarantees.
+- Windows CI pending. Final gate remains OPEN: clean-PC acceptance, signing/IT approval, manual accessibility, physical sleep/reboot/toasts, representative hardware profiling and retained feature extensions.
+
+
 ## 2026-11-04 — M5 advanced productivity
 - Schema v7 adds manual time entries, automation rules/history, completion events and saved productivity settings. Advanced page exposes workload metrics, daily completion bars, capacity suggestions, bulk priority updates, filters, task template and JSON/CSV task exchange.
 - Rules support overdue/tomorrow triggers, text conditions and priority actions. First matching rule wins, transactions prevent duplicate actions, and guarded undo preserves later edits. No network integrations or messages.

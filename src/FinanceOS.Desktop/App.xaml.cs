@@ -7,10 +7,30 @@ namespace FinanceOS.Desktop;
 
 public partial class App : Application
 {
+    private FileStream? _instanceLock;
+    protected override void OnExit(ExitEventArgs e)
+    {
+        _instanceLock?.Dispose();
+        base.OnExit(e);
+    }
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
         var path = AppDataPaths.DatabasePath(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            _instanceLock = new FileStream(path + ".instance-lock", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+        }
+        catch (IOException) { MessageBox.Show("FINANCE OS is already running, or its workspace cannot be locked. Close other instances and check workspace access."); Shutdown(2); return; }
+        catch (UnauthorizedAccessException) { MessageBox.Show("Workspace access was denied. Check your Windows profile permissions."); Shutdown(2); return; }
+        if (e.Args.Length > 0 && e.Args[0] == "--restore")
+        {
+            if (e.Args.Length != 2) { MessageBox.Show("Provide one backup file after --restore."); Shutdown(2); return; }
+            if (MessageBox.Show("Replace this workspace with the selected backup? The current database will be retained as a safety copy.", "Restore FINANCE OS", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) { Shutdown(); return; }
+            try { DatabaseRecovery.RestoreOfflineAsync(e.Args[1], path).GetAwaiter().GetResult(); }
+            catch (Exception) { MessageBox.Show("Restore failed. The original workspace was preserved. Check backup compatibility and close any database tools."); Shutdown(2); return; }
+        }
         MainWindow = new MainWindow(new SqliteAppStore(path), new SqliteTaskStore(path), new SqliteReminderStore(path), new SqliteWorkflowStore(path), new SqliteProductivityStore(path));
         try
         {

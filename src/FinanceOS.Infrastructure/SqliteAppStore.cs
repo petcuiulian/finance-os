@@ -25,6 +25,13 @@ public sealed class SqliteAppStore : IAppStore
         cancellationToken.ThrowIfCancellationRequested();
         Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
         using var connection = OpenConnection();
+        using (var probe = connection.CreateCommand())
+        {
+            probe.CommandText = "PRAGMA user_version;";
+            var existingVersion = Convert.ToInt32(probe.ExecuteScalar());
+            if (existingVersion > 0 && existingVersion < CurrentSchemaVersion)
+                DatabaseRecovery.Snapshot(_path, _path + ".before-v" + CurrentSchemaVersion + "-" + Guid.NewGuid().ToString("N") + ".db");
+        }
         using var transaction = connection.BeginTransaction();
         var version = Convert.ToInt32(ExecuteScalar(connection, transaction, "PRAGMA user_version;"));
         if (version > CurrentSchemaVersion)

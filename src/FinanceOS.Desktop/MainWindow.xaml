@@ -320,6 +320,9 @@
        <TextBlock x:Name="PreferencesHeading" Text="Preferences" Style="{StaticResource SectionTitle}" />
        <TextBlock x:Name="CurrentPreferencesText" Margin="0,16,0,16" AutomationProperties.LiveSetting="Polite" />
        <TextBlock x:Name="ModeDescription" Text="Simple and Advanced share the same data. Advanced features appear as they are built." Style="{StaticResource MutedText}" />
+       <WrapPanel Margin="0,14,0,0"><Button x:Name="BackupDatabaseButton" Content="Back up workspace" Click="OnBackupDatabase" /><Button x:Name="ExportDiagnosticsButton" Content="Export diagnostics" Click="OnExportDiagnostics" /></WrapPanel>
+       <TextBlock Text="Restore: close FINANCE OS, then launch FinanceOS.exe --restore followed by the quoted backup file path. Restore keeps a safety copy of the current workspace." TextWrapping="Wrap" Margin="0,8,0,0" />
+       <TextBlock x:Name="RecoveryStatusText" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
        <TextBlock x:Name="UnavailableDescription" Text="Appearance, language and mode can be changed from the header." Style="{StaticResource MutedText}" Margin="0,12,0,0" />
       </StackPanel></Border>
      </StackPanel>

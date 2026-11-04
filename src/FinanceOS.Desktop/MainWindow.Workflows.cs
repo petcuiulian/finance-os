@@ -122,8 +122,13 @@ public partial class MainWindow
     {
         _selectedCard = (WorkflowCard)((Button)sender).Tag;
         KanbanSelectedText.Text = _selectedCard.Title + " · " + _selectedCard.StageName;
-        var due = await _workflows.CardDeadlineAsync(_selectedCard.TaskId);
-        if (due is not null) KanbanSelectedText.Text += " · Due " + due.Value.ToString("d");
+        try
+        {
+            var card = _selectedCard;
+            var due = await _workflows.CardDeadlineAsync(card.TaskId);
+            if (_selectedCard == card && due is not null) KanbanSelectedText.Text += " · Due " + due.Value.ToString("d");
+        }
+        catch (Exception) { WorkflowStatusText.Text = "Stage deadline could not be loaded. Existing data was preserved."; }
         await RefreshChecklistAsync();
     }
     private async Task RefreshChecklistAsync()
@@ -245,7 +250,12 @@ public partial class MainWindow
         WaitingFollowupPicker.SelectedDate = item.FollowupDate.ToDateTime(TimeOnly.MinValue);
         WaitingDetailText.Text = $"Waiting {BusinessDays.Count(DateOnly.FromDateTime(item.StartedUtc.LocalDateTime), DateOnly.FromDateTime(DateTime.Today))} business days. " +
             (item.FollowupDate < DateOnly.FromDateTime(DateTime.Today) ? "Follow-up overdue; consider escalation." : "Follow-up scheduled.");
-        WaitingHistoryList.ItemsSource = await _workflows.WaitingHistoryAsync(item.TaskId);
+        try
+        {
+            var history = await _workflows.WaitingHistoryAsync(item.TaskId);
+            if (ReferenceEquals(WaitingGrid.SelectedItem, item)) WaitingHistoryList.ItemsSource = history;
+        }
+        catch (Exception) { WaitingStatusText.Text = "Waiting history could not be loaded. Existing data was preserved."; }
     }
     private async void OnStartWaiting(object sender, RoutedEventArgs e)
     {

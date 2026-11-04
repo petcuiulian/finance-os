@@ -26,6 +26,7 @@ function Invoke-ById($window, $id) {
     $pattern.Invoke()
 }
 function Run-Smoke([bool]$changePreferences, [bool]$forceCrash = $false) {
+    $launchWatch = [Diagnostics.Stopwatch]::StartNew()
     $process = Start-Process $exe -PassThru
     try {
         $deadline = (Get-Date).AddSeconds(30)
@@ -41,6 +42,8 @@ function Run-Smoke([bool]$changePreferences, [bool]$forceCrash = $false) {
             Start-Sleep -Milliseconds 200
         }
         if ($null -eq $count) { throw 'SQLite ready state was not visible within 30 seconds.' }
+        $process.Refresh()
+        Write-Host ("MEASURE: ready_ms={0}; working_set_mb={1:F1}; private_mb={2:F1}; hosted-runner, not target-laptop acceptance" -f $launchWatch.ElapsedMilliseconds, ($process.WorkingSet64 / 1MB), ($process.PrivateMemorySize64 / 1MB))
         foreach ($id in @('CheckStorageButton', 'TestNoticeButton')) {
             Invoke-ById $window $id
         }

@@ -41,8 +41,20 @@ jobs:
           if (!$process.WaitForExit(30000)) { $process.Kill(); throw 'Toast smoke timed out.' }
           Get-Content "$env:TEMP/finance-toast-smoke.txt"
           if ($process.ExitCode -ne 0) { throw "Toast smoke failed: $($process.ExitCode)" }
+      - name: Package portable Windows build
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/package-windows.ps1
+      - name: Extracted portable package smoke
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Expand-Archive artifacts/finance-os-win-x64.zip artifacts/extracted
+          ./scripts/smoke-windows.ps1 -ExecutablePath ./artifacts/extracted/FinanceOS.exe
       - uses: actions/upload-artifact@v4
         if: runner.os == 'Windows'
         with:
           name: finance-os-win-x64-unverified-release
-          path: artifacts/win-x64/
+          path: |
+            artifacts/finance-os-win-x64.zip
+            artifacts/package-sha256.txt
