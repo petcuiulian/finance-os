@@ -106,10 +106,11 @@ function Run-Smoke([bool]$changePreferences, [bool]$forceCrash = $false) {
         }
         $deadline = (Get-Date).AddSeconds(5)
         do {
-            $kanban = Find-ById $window 'KanbanHost'
-            $cards = $kanban.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
+            $cards = $window.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
             $cardFound = $false
-            foreach ($card in $cards) { if ($card.Current.Name -like '*M2 smoke task*') { $cardFound = $true; break } }
+            foreach ($card in $cards) {
+                if ($card.Current.ControlType -eq [System.Windows.Automation.ControlType]::Button -and $card.Current.Name -like '*M2 smoke task*') { $cardFound = $true; break }
+            }
             if ($cardFound) { break }
             Start-Sleep -Milliseconds 100
         } while ((Get-Date) -lt $deadline)
