@@ -14,7 +14,7 @@ public partial class MainWindow
     private readonly SqliteReminderStore _reminders;
     private readonly DispatcherTimer _reminderTimer = new() { Interval = TimeSpan.FromSeconds(15) };
     private System.Windows.Forms.NotifyIcon? _tray;
-    private bool _reconciling;
+    private readonly SemaphoreSlim _reminderGate = new(1, 1);
     private WorkTask? _reminderTask;
 
     private NotificationOptions _notificationOptions = new(false, false, false, false);
@@ -74,15 +74,18 @@ public partial class MainWindow
 
     private async Task ReconcileRemindersAsync()
     {
-        if (!_ready || _reconciling || _lifetime.IsCancellationRequested) return;
-        _reconciling = true;
+        if (!_ready || _lifetime.IsCancellationRequested) return;
+        await _reminderGate.WaitAsync();
         try
         {
+            if (_lifetime.IsCancellationRequested) return;
             var now = DateTimeOffset.UtcNow;
             await _reminders.ReconcileAsync(now);
             var alerts = await _reminders.AlertsAsync(now);
             if (_lifetime.IsCancellationRequested) return;
+            var selectedAlert = (ReminderGrid.SelectedItem as ReminderAlert)?.Id;
             ReminderGrid.ItemsSource = alerts;
+            ReminderGrid.SelectedItem = alerts.FirstOrDefault(x => x.Id == selectedAlert);
             ScheduledReminderGrid.ItemsSource = await _reminders.SchedulesAsync();
             RemindersButton.Content = T($"Reminders ({alerts.Count})", $"Mementouri ({alerts.Count})");
             ReminderStatusText.Text = T($"{alerts.Count} active alerts. Recovered alerts stay until dismissed.", $"{alerts.Count} alerte active. Alertele recuperate rămân până la confirmare.");
@@ -110,7 +113,7 @@ public partial class MainWindow
         {
             if (!_lifetime.IsCancellationRequested) ReminderStatusText.Text = "Reminder reconciliation failed. It will retry; existing reminders were preserved.";
         }
-        finally { _reconciling = false; }
+        finally { _reminderGate.Release(); }
     }
 
     private static DateTime LocalInput(DateTime? date, string time)
