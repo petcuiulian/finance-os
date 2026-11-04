@@ -1,11 +1,11 @@
 # Durable work log
 
-## 2026-11-04 — M4 workflow implementation; Windows acceptance pending
+## 2026-11-04 — M4 workflow implementation and automated acceptance
 - Added transactional schema v6 and five editable finance templates, editable Kanban stages/cards, stage checklists, display statuses and entry-relative stage deadlines/reminders.
 - Added waiting-for-response with contact, expected/follow-up dates, business-day count/default, local reminder and durable history. Added daily/weekly/monthly task generation with month-end anchors and cycle-checked dependencies that block premature completion.
-- **PASS (Linux):** locked restore, Release cross-build including WPF XAML, formatting and 29/29 tests. Integration tests cover workflow persistence, reminders, recurrence, dependencies and a synthetic 100-task AP/closing/approval scenario.
-- **PENDING:** Windows CI desktop smoke and physical high-volume UI review. M3 sleep/reboot/tray/visible-toast target-device checks remain open by explicit separation. No external communication is sent.
-- **Next:** verify Windows CI and fix any failures; then M5 implementation when requested, while retaining M3 physical validation.
+- **PASS:** [CI run 41807602883](https://github.com/petcuiulian/finance-os/actions/runs/41807602883), commit `b9c3fb8`: locked restore, Release build, formatting and 29/29 tests on Linux and Windows. Windows development/published smoke verified Kanban card visibility after process termination/restart; toast API smoke also passed. Integration tests cover workflow persistence, reminders, recurrence, dependencies and a synthetic 100-task AP/closing/approval scenario.
+- **UNVERIFIED:** physical high-volume UI review. M3 sleep/reboot/tray/visible-toast target-device checks remain open by explicit separation. No external communication is sent.
+- **Next:** M5 advanced productivity when requested, while retaining M3 physical validation and M4 physical UX review.
 
 ## 2026-11-04 — M3 implementation; lifecycle gate remains open
 - Added schema v5 reminder definitions, unique durable inbox occurrences, persisted notification options and UTC time blocks. Existing schemas upgrade transactionally.

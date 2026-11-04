@@ -41,7 +41,7 @@ See [M3 validation](M3_VALIDATION.md) for recovery semantics, target-device step
 - [x] Customizable workflow templates: Intercompany, AP, Month-End, Follow-Up, Recurring Controls; create/rename/reorder stages and configure entry-relative deadlines/reminders.
 - [x] Waiting-for-Response: contact, expected response, follow-up reminder, business-day count/default and durable history.
 - [x] Recurring tasks, dependencies, configurable statuses, editable Kanban and stage-based checklists.
-**Gate: automated scenario passed; Windows UI acceptance pending.** A 100-task synthetic accountant case covers 60 AP requests, 40 closing items, 20 waiting approvals and 10 dependencies. Linux build and 29 tests pass. Windows CI and physical UX review remain to be recorded.
+**Gate: automated acceptance passed; physical UX review pending.** A 100-task synthetic accountant case covers 60 AP requests, 40 closing items, 20 waiting approvals and 10 dependencies. [CI run 41807602883](https://github.com/petcuiulian/finance-os/actions/runs/41807602883) passed Linux/Windows builds, 29 tests, Windows development/published UI smoke with Kanban restart persistence and toast API smoke. Target-laptop high-volume UX remains unverified.
 
 ## M5 — Advanced productivity
 - [ ] WHEN/IF/THEN rule engine with loop/conflict/idempotency safeguards and traceability.
@@ -59,7 +59,7 @@ See [M3 validation](M3_VALIDATION.md) for recovery semantics, target-device step
 **Gate:** independently verified desktop product; not just a working dev server.
 
 ## Current next task
-**M4 — finish Windows CI and workflow UI acceptance; M3 physical-device gate remains open.** The user explicitly requested M4 despite the earlier sequencing note. After M4 acceptance, M5 is the next implementation milestone. Keep the M3 target-device work and all original features in scope.
+**M5 — advanced productivity implementation, when requested.** The user explicitly requested M4 despite the earlier M3 sequencing note. M4 automated acceptance passed; M3 physical lifecycle and M4 physical high-volume UX remain open target-device checks. Keep all original features in scope.
 
 ## Scope management
 - No feature is canceled because it is in a later milestone.
